@@ -1,69 +1,194 @@
-# React + TypeScript + Vite
+# Spendlyzer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, mobile-first personal expense tracking application built with React, TypeScript, and Supabase. Spendlyzer helps you manage your finances with comprehensive expense and income tracking, analytics, and a responsive design optimized for mobile devices.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 📱 Core Functionality
+- **User Authentication**: Secure signup/login with Supabase Auth
+- **Expense Management**: Add, edit, delete expenses with categories and types
+- **Income Tracking**: Record and manage income sources
+- **Real-time Dashboard**: Live overview with totals and recent transactions
+- **Transaction History**: Comprehensive view of all financial transactions
+- **Analytics**: Visual insights with charts and category breakdowns
+- **Expense Splitting**: Split expenses with friends using Splitwise-style functionality
 
-## Expanding the ESLint configuration
+### 🎨 User Experience
+- **Mobile-First Design**: Optimized for mobile devices with responsive layout
+- **Smooth Animations**: 300ms transitions and modal animations
+- **Toast Notifications**: Success/error feedback with undo functionality
+- **Hamburger Navigation**: Mobile-optimized navigation menu
+- **Card-based Mobile View**: Transaction cards for mobile, table view for desktop
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### ⚙️ Technical Features
+- **Real-time Updates**: Live dashboard updates with Supabase real-time subscriptions
+- **Form Validation**: Comprehensive validation with React Hook Form
+- **Error Handling**: Graceful error handling throughout the application
+- **TypeScript**: Full type safety across the codebase
+- **Responsive Breakpoints**: Uses Tailwind's `md:` breakpoint (768px) strategy
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+- **Frontend**: Vite + React 19.1.1 + TypeScript 5.8.3
+- **Styling**: Tailwind CSS 4.1.13
+- **Forms**: React Hook Form 7.62.0
+- **Icons**: Heroicons 2.2.0
+- **UI Components**: Headless UI 2.2.7
+- **Backend**: Supabase (authentication + database + real-time)
+- **Routing**: React Router DOM 7.8.2
+- **Charts**: Chart.js 4.5.0 + React Chart.js 2 5.3.0
+- **Date Handling**: date-fns 4.1.0
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (version 18 or higher)
+- npm or yarn
+- A Supabase account
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd spendlyzer
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Database Setup**
+   
+   Set up your Supabase database with the required tables and triggers:
+   - Import the SQL migrations from `database/migrations/`
+   - Ensure Row Level Security (RLS) is enabled
+   - Configure the authentication triggers
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## 📁 Project Structure
+
+```
+spendlyzer/
+├── src/
+│   ├── components/
+│   │   ├── Auth/             # Authentication components
+│   │   ├── Dashboard/        # Main dashboard
+│   │   ├── Expenses/         # Expense management
+│   │   ├── Income/           # Income tracking
+│   │   ├── History/          # Transaction history
+│   │   ├── Analytics/        # Charts and analytics
+│   │   ├── Settings/         # User preferences
+│   │   ├── ExpenseTypes/     # Expense type management
+│   │   └── UI/              # Reusable UI components
+│   ├── context/
+│   │   └── AuthContext.tsx   # Authentication state management
+│   ├── hooks/
+│   │   └── useUserPreferences.ts # User preferences hook
+│   ├── lib/
+│   │   └── supabase.ts       # Supabase client configuration
+│   ├── utils/
+│   │   ├── currency.ts       # Currency formatting utilities
+│   │   └── splitwise.ts      # Expense splitting logic
+│   ├── App.tsx               # Main app component
+│   └── main.tsx             # App entry point
+├── database/
+│   └── migrations/           # Supabase database migrations
+├── public/                   # Static assets
+└── ...config files
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🗄️ Database Schema
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Core Tables
+- **categories**: User expense categories (Fixed/Variable/Optional)
+- **expense_types**: Specific expense types within categories
+- **expenses**: Individual expense transactions with splitting support
+- **income**: Income tracking records
+- **expense_splits**: Track split expenses between users
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Key Features
+- **Automatic Data Creation**: Default categories and expense types created on user signup
+- **CASCADE Deletes**: Automatic cleanup when users are deleted
+- **Row Level Security**: User data isolation
+- **Real-time Subscriptions**: Live updates across the application
+
+## 🔧 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Lint code with ESLint
+- `npm run preview` - Preview production build locally
+
+## 📊 Key Features Deep Dive
+
+### Expense Splitting
+Spendlyzer includes Splitwise-style expense splitting functionality:
+- Split expenses equally among participants
+- Track who owes whom
+- Settle debts between friends
+- Integration with existing expense categories
+
+### Mobile Responsiveness
+- **Mobile-First**: Designed primarily for mobile devices
+- **Responsive Navigation**: Hamburger menu for mobile, horizontal nav for desktop
+- **Adaptive Layouts**: Card view for mobile transactions, table view for desktop
+- **Touch-Friendly**: Optimized touch targets and interactions
+
+### Real-time Updates
+- Dashboard updates automatically when new transactions are added
+- Live expense totals and statistics
+- Instant synchronization across devices
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙋‍♂️ Support
+
+If you encounter any issues or have questions:
+1. Check the existing issues on GitHub
+2. Create a new issue with detailed information
+3. Include steps to reproduce any bugs
+
+## 🚧 Roadmap
+
+### Upcoming Features
+- [ ] Budget tracking and alerts
+- [ ] Recurring expense automation
+- [ ] Export data to CSV/PDF
+- [ ] Dark mode support
+- [ ] Multi-currency support
+- [ ] Receipt photo uploads
+
+### Known Limitations
+- Brief category loading flash for new users
+- Filter UI uses basic dropdowns (improvements planned)
+
+---
+
+Built with ❤️ using React, TypeScript, and Supabase.

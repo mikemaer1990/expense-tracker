@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { supabase } from '../../lib/supabase'
+import { useUserPreferences } from '../../hooks/useUserPreferences'
 
 interface ExpenseForm {
   expense_type_id: string
@@ -11,6 +12,8 @@ interface ExpenseForm {
   recurring_frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly'
   recurring_start_date?: string
   recurring_end_date?: string
+  is_split: boolean
+  split_with?: string
 }
 
 interface ExpenseType {
@@ -31,6 +34,7 @@ interface EditExpenseProps {
 }
 
 export default function EditExpense({ expense, expenseTypes, onClose, onSuccess }: EditExpenseProps) {
+  const { preferences } = useUserPreferences()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [isVisible, setIsVisible] = useState(false)
@@ -61,17 +65,21 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   } = useForm<ExpenseForm>({
     defaultValues: {
       expense_type_id: expense.expense_type_id || '',
-      amount: expense.amount,
+      amount: expense.is_split ? expense.original_amount || expense.amount : expense.amount,
       date: expense.date,
       description: cleanDescription || '',
       is_recurring: isCurrentlyRecurring,
       recurring_frequency: currentFrequency as any,
       recurring_start_date: expense.date,
+      is_split: expense.is_split || false,
+      split_with: expense.split_with || '',
     },
   })
 
   const isRecurring = watch('is_recurring')
   const recurringFrequency = watch('recurring_frequency')
+  const isSplit = watch('is_split')
+  const amount = watch('amount')
 
   const handleClose = () => {
     setIsVisible(false)
@@ -95,10 +103,17 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       setError('')
       setLoading(true)
 
+      // Calculate amounts for splitting
+      const originalAmount = Number(data.amount)
+      const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
+
       let updateData: any = {
         expense_type_id: data.expense_type_id,
-        amount: data.amount,
-        is_recurring: data.is_recurring
+        amount: finalAmount,
+        is_recurring: data.is_recurring,
+        is_split: data.is_split,
+        original_amount: data.is_split ? originalAmount : null,
+        split_with: data.is_split ? data.split_with || null : null,
       }
 
       if (data.is_recurring) {
@@ -194,6 +209,47 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                 <p className="mt-1 text-sm text-red-600">{errors.amount.message}</p>
               )}
             </div>
+
+            {/* Expense Splitting (conditional) */}
+            {preferences.enableExpenseSplitting && (
+              <div>
+                <label className="flex items-center">
+                  <input
+                    {...register('is_split')}
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Split this expense</span>
+                </label>
+                
+                {isSplit && (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Split with</label>
+                      <input
+                        {...register('split_with', { 
+                          required: isSplit ? 'Please specify who you\'re splitting with' : false 
+                        })}
+                        type="text"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., GF, Roommate, Friend"
+                      />
+                      {errors.split_with && (
+                        <p className="mt-1 text-sm text-red-600">{errors.split_with.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="bg-blue-50 p-3 rounded-md">
+                      <h4 className="text-sm font-medium text-blue-900">Split Preview:</h4>
+                      <p className="text-sm text-blue-700">
+                        Original amount: ${(Number(amount) || 0).toFixed(2)}<br />
+                        Your share: ${((Number(amount) || 0) / 2).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Recurring Toggle */}
             <div>

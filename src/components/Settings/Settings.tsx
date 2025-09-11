@@ -71,7 +71,7 @@ export default function Settings() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Expense Tracker
+                Spendlyzer
               </h1>
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
                 <Link
@@ -235,52 +235,112 @@ export default function Settings() {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Default Currency
                     </label>
-                    <select
-                      value={preferences.currency}
-                      onChange={(e) => handleSettingChange('currency', e.target.value)}
-                      disabled={loading}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="CAD">CAD (C$)</option>
-                      <option value="AUD">AUD (A$)</option>
-                    </select>
+                    <div className="inline-flex bg-gray-100 rounded-md p-1 flex-wrap">
+                      {[
+                        { value: 'USD', label: 'USD ($)' },
+                        { value: 'EUR', label: 'EUR (€)' },
+                        { value: 'GBP', label: 'GBP (£)' },
+                        { value: 'CAD', label: 'CAD (C$)' },
+                        { value: 'AUD', label: 'AUD (A$)' }
+                      ].map(currency => (
+                        <button
+                          key={currency.value}
+                          onClick={() => handleSettingChange('currency', currency.value)}
+                          disabled={loading}
+                          className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+                            preferences.currency === currency.value 
+                              ? 'bg-white text-gray-900 shadow-sm' 
+                              : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                          }`}
+                        >
+                          {currency.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date Format
                     </label>
-                    <select
-                      value={preferences.dateFormat}
-                      onChange={(e) => handleSettingChange('dateFormat', e.target.value)}
-                      disabled={loading}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    </select>
+                    <div className="inline-flex bg-gray-100 rounded-md p-1 flex-wrap">
+                      {[
+                        { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+                        { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+                        { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' }
+                      ].map(format => (
+                        <button
+                          key={format.value}
+                          onClick={() => handleSettingChange('dateFormat', format.value)}
+                          disabled={loading}
+                          className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+                            preferences.dateFormat === format.value 
+                              ? 'bg-white text-gray-900 shadow-sm' 
+                              : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                          }`}
+                        >
+                          {format.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Theme
                     </label>
-                    <select
-                      value={preferences.theme}
-                      onChange={(e) => handleSettingChange('theme', e.target.value)}
-                      disabled={loading}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="light">Light</option>
-                      <option value="dark">Dark (Coming Soon)</option>
-                    </select>
+                    <div className="inline-flex bg-gray-100 rounded-md p-1">
+                      <button
+                        onClick={() => handleSettingChange('theme', 'light')}
+                        disabled={loading}
+                        className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+                          preferences.theme === 'light' 
+                            ? 'bg-white text-gray-900 shadow-sm' 
+                            : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                        }`}
+                      >
+                        Light
+                      </button>
+                      <button
+                        disabled={true}
+                        className="px-3 py-1 text-sm font-medium rounded transition-all duration-200 opacity-50 cursor-not-allowed text-gray-400"
+                        title="Dark mode coming soon"
+                      >
+                        Dark (Coming Soon)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-start justify-between py-1">
+                      <div className="flex-1 mr-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Enable Expense Splitting
+                        </label>
+                        <p className="text-sm text-gray-500">
+                          Split expenses with others (e.g., groceries with your partner)
+                        </p>
+                      </div>
+                      <div className="flex items-center pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSettingChange('enableExpenseSplitting', (!preferences.enableExpenseSplitting).toString())}
+                          disabled={loading}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                            preferences.enableExpenseSplitting ? 'bg-blue-600' : 'bg-gray-200'
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              preferences.enableExpenseSplitting ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

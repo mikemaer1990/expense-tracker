@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useUserPreferences } from '../../hooks/useUserPreferences'
 
 interface ExpenseForm {
   category_id: string
@@ -13,6 +14,8 @@ interface ExpenseForm {
   recurring_frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly'
   recurring_start_date?: string
   recurring_end_date?: string
+  is_split: boolean
+  split_with?: string
 }
 
 interface Category {
@@ -29,6 +32,7 @@ interface ExpenseType {
 
 export default function AddExpense({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { user } = useAuth()
+  const { preferences } = useUserPreferences()
   const [categories, setCategories] = useState<Category[]>([])
   const [expenseTypes, setExpenseTypes] = useState<ExpenseType[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
@@ -46,12 +50,16 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
       description: '',
       is_recurring: false,
       recurring_start_date: new Date().toISOString().split('T')[0],
+      is_split: false,
+      split_with: '',
     },
   })
 
   const watchedCategoryId = watch('category_id')
   const isRecurring = watch('is_recurring')
   const recurringFrequency = watch('recurring_frequency')
+  const isSplit = watch('is_split')
+  const amount = watch('amount')
 
   useEffect(() => {
     if (user) {
@@ -103,6 +111,10 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
       setError('')
       setLoading(true)
 
+      // Calculate amounts for splitting
+      const originalAmount = Number(data.amount)
+      const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
+
       if (data.is_recurring) {
         // Create recurring expense entry with frequency in description
         const frequencyText = data.recurring_frequency === 'biweekly' ? 'every 2 weeks' : `every ${data.recurring_frequency?.replace('ly', '')}`
@@ -111,10 +123,13 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
         const { error } = await supabase.from('expenses').insert({
           user_id: user!.id,
           expense_type_id: data.expense_type_id,
-          amount: data.amount,
+          amount: finalAmount,
           date: data.recurring_start_date!,
           is_recurring: true,
           description: recurringDescription,
+          is_split: data.is_split,
+          original_amount: data.is_split ? originalAmount : null,
+          split_with: data.is_split ? data.split_with || null : null,
         })
 
         if (error) throw error
@@ -123,10 +138,13 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
         const { error } = await supabase.from('expenses').insert({
           user_id: user!.id,
           expense_type_id: data.expense_type_id,
-          amount: data.amount,
+          amount: finalAmount,
           description: data.description || null,
           date: data.date,
           is_recurring: false,
+          is_split: data.is_split,
+          original_amount: data.is_split ? originalAmount : null,
+          split_with: data.is_split ? data.split_with || null : null,
         })
 
         if (error) throw error
@@ -227,6 +245,47 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                 <p className="mt-1 text-sm text-red-600">{errors.amount.message}</p>
               )}
             </div>
+
+            {/* Expense Splitting (conditional) */}
+            {preferences.enableExpenseSplitting && (
+              <div>
+                <label className="flex items-center">
+                  <input
+                    {...register('is_split')}
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Split this expense</span>
+                </label>
+                
+                {isSplit && (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Split with</label>
+                      <input
+                        {...register('split_with', { 
+                          required: isSplit ? 'Please specify who you\'re splitting with' : false 
+                        })}
+                        type="text"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., GF, Roommate, Friend"
+                      />
+                      {errors.split_with && (
+                        <p className="mt-1 text-sm text-red-600">{errors.split_with.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="bg-blue-50 p-3 rounded-md">
+                      <h4 className="text-sm font-medium text-blue-900">Split Preview:</h4>
+                      <p className="text-sm text-blue-700">
+                        Original amount: ${(Number(amount) || 0).toFixed(2)}<br />
+                        Your share: ${((Number(amount) || 0) / 2).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Recurring Toggle */}
             <div>

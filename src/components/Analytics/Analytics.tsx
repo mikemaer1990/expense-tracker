@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Bars3Icon, XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
+import { useUserPreferences } from '../../hooks/useUserPreferences'
 import { supabase } from '../../lib/supabase'
+import { formatCurrency } from '../../utils/currency'
 import CategoryBreakdown from './CategoryBreakdown'
 import DataGrid from './DataGrid'
 import PieChart from './PieChart'
@@ -32,6 +34,7 @@ type ViewMode = 'breakdown' | 'grid'
 
 export default function Analytics() {
   const { user, signOut } = useAuth()
+  const { preferences } = useUserPreferences()
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState<CategoryData[]>([])
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('monthly')
@@ -248,7 +251,7 @@ export default function Analytics() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Expense Tracker
+                Spendlyzer
               </h1>
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
                 <Link
@@ -486,7 +489,7 @@ export default function Analytics() {
                         Income ({currentPeriodLabel})
                       </dt>
                       <dd className="text-lg font-medium text-green-600">
-                        ${totalIncome.toFixed(2)}
+                        {formatCurrency(totalIncome, preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -508,7 +511,7 @@ export default function Analytics() {
                         Expenses ({currentPeriodLabel})
                       </dt>
                       <dd className="text-lg font-medium text-orange-600">
-                        ${totalExpenses.toFixed(2)}
+                        {formatCurrency(totalExpenses, preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -534,7 +537,7 @@ export default function Analytics() {
                       <dd className={`text-lg font-medium ${
                         surplus >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        ${Math.abs(surplus).toFixed(2)}
+                        {formatCurrency(Math.abs(surplus), preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -570,6 +573,7 @@ export default function Analytics() {
                 {/* Bar Chart - Monthly Comparison */}
                 {timePeriod === 'yearly' && (
                   <BarChart
+                    currency={preferences.currency}
                     data={Array.from({ length: 12 }, (_, i) => {
                       const monthKey = new Date(2024, i).toLocaleString('default', { month: 'short' })
                       const monthTotal = categories.reduce((sum, cat) => 
@@ -595,6 +599,7 @@ export default function Analytics() {
               {/* Line Chart - Spending Trends */}
               {timePeriod === 'yearly' && (
                 <LineChart
+                  currency={preferences.currency}
                   data={Array.from({ length: 12 }, (_, i) => {
                     const monthKey = new Date(2024, i).toLocaleString('default', { month: 'short' })
                     const monthTotal = categories.reduce((sum, cat) => 
@@ -618,6 +623,7 @@ export default function Analytics() {
                 categories={categories}
                 timePeriod={timePeriod}
                 currentPeriodLabel={currentPeriodLabel}
+                currency={preferences.currency}
               />
             </div>
           ) : (
@@ -625,6 +631,7 @@ export default function Analytics() {
               <DataGrid 
                 data={gridData}
                 selectedYear={selectedYear}
+                currency={preferences.currency}
                 onExportCSV={() => console.log('CSV exported')}
               />
             ) : (

@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import { useUserPreferences } from "../../hooks/useUserPreferences";
 import AddExpense from "../Expenses/AddExpense";
 import AddIncome from "../Income/AddIncome";
 import IconRenderer from "../UI/IconRenderer";
 import UserDropdown from "../UI/UserDropdown";
 import { supabase } from "../../lib/supabase";
+import { formatCurrency } from "../../utils/currency";
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const { preferences } = useUserPreferences();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -128,7 +131,7 @@ export default function Dashboard() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Expense Tracker
+                Spendlyzer
               </h1>
               {/* Desktop Navigation */}
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
@@ -267,7 +270,7 @@ export default function Dashboard() {
                         Total Expenses
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        ${totalExpenses.toFixed(2)}
+                        {formatCurrency(totalExpenses, preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -289,7 +292,7 @@ export default function Dashboard() {
                         This Month
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        ${monthlyExpenses.toFixed(2)}
+                        {formatCurrency(monthlyExpenses, preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -311,7 +314,7 @@ export default function Dashboard() {
                         Total Income
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        ${totalIncome.toFixed(2)}
+                        {formatCurrency(totalIncome, preferences.currency)}
                       </dd>
                     </dl>
                   </div>
@@ -415,7 +418,7 @@ export default function Dashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            ${expense.amount?.toFixed(2)}
+                            {formatCurrency(expense.amount || 0, preferences.currency)}
                           </p>
                         </div>
                       </div>

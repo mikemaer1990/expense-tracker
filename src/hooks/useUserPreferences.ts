@@ -6,18 +6,21 @@ export interface UserPreferences {
   currency: string
   dateFormat: string
   theme: string
+  enableExpenseSplitting: boolean
 }
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   currency: 'CAD',
   dateFormat: 'MM/DD/YYYY',
-  theme: 'light'
+  theme: 'light',
+  enableExpenseSplitting: false
 }
 
 const STORAGE_KEYS = {
   currency: 'expense_tracker_currency',
   dateFormat: 'expense_tracker_dateFormat',
-  theme: 'expense_tracker_theme'
+  theme: 'expense_tracker_theme',
+  enableExpenseSplitting: 'expense_tracker_enableExpenseSplitting'
 } as const
 
 export function useUserPreferences() {
@@ -31,7 +34,8 @@ export function useUserPreferences() {
     return {
       currency: localStorage.getItem(STORAGE_KEYS.currency) || DEFAULT_PREFERENCES.currency,
       dateFormat: localStorage.getItem(STORAGE_KEYS.dateFormat) || DEFAULT_PREFERENCES.dateFormat,
-      theme: localStorage.getItem(STORAGE_KEYS.theme) || DEFAULT_PREFERENCES.theme
+      theme: localStorage.getItem(STORAGE_KEYS.theme) || DEFAULT_PREFERENCES.theme,
+      enableExpenseSplitting: localStorage.getItem(STORAGE_KEYS.enableExpenseSplitting) === 'true'
     }
   }
 
@@ -40,6 +44,7 @@ export function useUserPreferences() {
     localStorage.setItem(STORAGE_KEYS.currency, prefs.currency)
     localStorage.setItem(STORAGE_KEYS.dateFormat, prefs.dateFormat)
     localStorage.setItem(STORAGE_KEYS.theme, prefs.theme)
+    localStorage.setItem(STORAGE_KEYS.enableExpenseSplitting, prefs.enableExpenseSplitting.toString())
   }
 
   // Load preferences from Supabase
@@ -49,7 +54,7 @@ export function useUserPreferences() {
     try {
       const { data, error } = await supabase
         .from('user_preferences')
-        .select('currency, date_format, theme')
+        .select('currency, date_format, theme, enable_expense_splitting')
         .eq('user_id', user.id)
         .single()
 
@@ -64,7 +69,8 @@ export function useUserPreferences() {
       return {
         currency: data.currency,
         dateFormat: data.date_format,
-        theme: data.theme
+        theme: data.theme,
+        enableExpenseSplitting: data.enable_expense_splitting || false
       }
     } catch (err) {
       console.error('Error loading preferences from Supabase:', err)
@@ -84,6 +90,7 @@ export function useUserPreferences() {
           currency: prefs.currency,
           date_format: prefs.dateFormat,
           theme: prefs.theme,
+          enable_expense_splitting: prefs.enableExpenseSplitting,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -98,7 +105,9 @@ export function useUserPreferences() {
 
   // Update a specific preference
   const updatePreference = async (key: keyof UserPreferences, value: string) => {
-    const newPreferences = { ...preferences, [key]: value }
+    // Convert string to proper type for boolean fields
+    const actualValue = key === 'enableExpenseSplitting' ? value === 'true' : value
+    const newPreferences = { ...preferences, [key]: actualValue }
     
     // Update state immediately
     setPreferences(newPreferences)

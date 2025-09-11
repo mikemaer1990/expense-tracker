@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDownIcon, ChevronRightIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
+import { formatCurrency } from '../../utils/currency'
 
 interface MonthlyData {
   [month: string]: number
@@ -27,12 +28,13 @@ interface CategoryRow {
 interface DataGridProps {
   data: CategoryRow[]
   selectedYear: number
+  currency?: string
   onExportCSV?: () => void
 }
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridProps) {
+export default function DataGrid({ data, selectedYear, currency = 'USD', onExportCSV }: DataGridProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   const toggleCategory = (categoryId: string) => {
@@ -181,11 +183,11 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
                     </td>
                     {months.map(month => (
                       <td key={month} className="px-3 py-4 text-center text-sm text-gray-900">
-                        ${(category.monthlyData[month] || 0).toFixed(0)}
+                        {formatCurrency(category.monthlyData[month] || 0, currency, 0)}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-center font-semibold text-gray-900">
-                      ${category.yearTotal.toFixed(2)}
+                      {formatCurrency(category.yearTotal, currency)}
                     </td>
                   </tr>
 
@@ -199,11 +201,11 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
                       </td>
                       {months.map(month => (
                         <td key={month} className="px-2 py-3 text-center text-sm text-gray-700">
-                          {expenseType.monthlyData[month] ? `$${expenseType.monthlyData[month].toFixed(0)}` : '-'}
+                          {expenseType.monthlyData[month] ? formatCurrency(expenseType.monthlyData[month], currency, 0) : '-'}
                         </td>
                       ))}
                       <td className="px-4 py-3 text-center text-sm font-medium text-gray-700">
-                        ${expenseType.yearTotal.toFixed(2)}
+                        {formatCurrency(expenseType.yearTotal, currency)}
                       </td>
                     </tr>
                   ))}
@@ -218,11 +220,11 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
               </td>
               {months.map(month => (
                 <td key={month} className="px-2 py-4 text-center text-blue-900">
-                  ${(monthlyTotals[month] || 0).toFixed(0)}
+                  {formatCurrency(monthlyTotals[month] || 0, currency, 0)}
                 </td>
               ))}
               <td className="px-4 py-4 text-center text-blue-900 font-bold">
-                ${grandTotal.toFixed(2)}
+                {formatCurrency(grandTotal, currency)}
               </td>
             </tr>
           </tbody>
@@ -262,7 +264,7 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
                       <span className="font-medium text-gray-900">{category.name}</span>
                     </div>
                     <span className="font-semibold text-gray-900">
-                      ${category.yearTotal.toFixed(2)}
+                      {formatCurrency(category.yearTotal, currency)}
                     </span>
                   </div>
                 </div>
@@ -276,7 +278,7 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
                           <div key={month} className="text-center">
                             <div className="text-xs text-gray-500">{month}</div>
                             <div className="text-sm font-medium">
-                              ${(category.monthlyData[month] || 0).toFixed(0)}
+                              {formatCurrency(category.monthlyData[month] || 0, currency, 0)}
                             </div>
                           </div>
                         ))}
@@ -289,14 +291,14 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
                             <div key={expenseType.id} className="bg-gray-50 p-3 rounded">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="text-sm font-medium">{expenseType.name}</span>
-                                <span className="text-sm font-semibold">${expenseType.yearTotal.toFixed(2)}</span>
+                                <span className="text-sm font-semibold">{formatCurrency(expenseType.yearTotal, currency)}</span>
                               </div>
                               <div className="grid grid-cols-4 gap-2">
                                 {months.map(month => (
                                   <div key={month} className="text-center">
                                     <div className="text-xs text-gray-500">{month.slice(0, 1)}</div>
                                     <div className="text-xs">
-                                      {expenseType.monthlyData[month] ? `$${expenseType.monthlyData[month].toFixed(0)}` : '-'}
+                                      {expenseType.monthlyData[month] ? formatCurrency(expenseType.monthlyData[month], currency, 0) : '-'}
                                     </div>
                                   </div>
                                 ))}
@@ -316,14 +318,14 @@ export default function DataGrid({ data, selectedYear, onExportCSV }: DataGridPr
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex justify-between items-center mb-3">
               <span className="font-bold text-blue-900">TOTAL</span>
-              <span className="font-bold text-blue-900">${grandTotal.toFixed(2)}</span>
+              <span className="font-bold text-blue-900">{formatCurrency(grandTotal, currency)}</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {months.map(month => (
                 <div key={month} className="text-center">
                   <div className="text-xs text-blue-700">{month}</div>
                   <div className="text-sm font-medium text-blue-900">
-                    ${(monthlyTotals[month] || 0).toFixed(0)}
+                    {formatCurrency(monthlyTotals[month] || 0, currency, 0)}
                   </div>
                 </div>
               ))}

@@ -262,7 +262,7 @@ export default function History() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Expense Tracker
+                Spendlyzer
               </h1>
               {/* Desktop Navigation */}
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">

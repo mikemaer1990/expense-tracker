@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { formatCurrency } from '../../utils/currency'
 
 interface ExpenseTypeData {
   id: string
@@ -22,6 +23,7 @@ interface CategoryBreakdownProps {
   categories: CategoryData[]
   timePeriod: 'monthly' | 'yearly'
   currentPeriodLabel: string
+  currency: string
   onExpenseTypeClick?: (categoryId: string, expenseTypeId: string) => void
 }
 
@@ -29,6 +31,7 @@ export default function CategoryBreakdown({
   categories, 
   timePeriod, 
   currentPeriodLabel,
+  currency,
   onExpenseTypeClick 
 }: CategoryBreakdownProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -97,11 +100,11 @@ export default function CategoryBreakdown({
                 
                 <div className="text-right">
                   <div className="text-xl font-semibold text-gray-900">
-                    ${category.totalAmount.toFixed(2)}
+                    {formatCurrency(category.totalAmount, currency)}
                   </div>
                   {timePeriod === 'yearly' && (
                     <div className="text-sm text-gray-500">
-                      Avg: ${(category.totalAmount / 12).toFixed(2)}/month
+                      Avg: {formatCurrency(category.totalAmount / 12, currency)}/month
                     </div>
                   )}
                 </div>
@@ -147,7 +150,7 @@ export default function CategoryBreakdown({
                                 <div className="text-sm text-gray-500 mt-1 space-x-4">
                                   {timePeriod === 'yearly' && Object.keys(expenseType.monthlyData).length > 0 && (
                                     <span>
-                                      Monthly avg: ${(expenseType.totalAmount / Math.max(Object.keys(expenseType.monthlyData).length, 1)).toFixed(2)}
+                                      Monthly avg: {formatCurrency(expenseType.totalAmount / Math.max(Object.keys(expenseType.monthlyData).length, 1), currency)}
                                     </span>
                                   )}
                                   {expenseType.transactionCount > 0 && (
@@ -160,7 +163,7 @@ export default function CategoryBreakdown({
                               
                               <div className="text-right ml-4">
                                 <div className="font-semibold text-gray-900">
-                                  ${expenseType.totalAmount.toFixed(2)}
+                                  {formatCurrency(expenseType.totalAmount, currency)}
                                 </div>
                                 {timePeriod === 'yearly' && Object.keys(expenseType.monthlyData).length > 0 && (
                                   <div className="text-sm text-gray-500">
@@ -178,7 +181,7 @@ export default function CategoryBreakdown({
                                     <div key={month} className="text-center">
                                       <div className="font-medium text-gray-600">{month}</div>
                                       <div className={`${expenseType.monthlyData[month] ? 'text-gray-900' : 'text-gray-300'}`}>
-                                        ${expenseType.monthlyData[month]?.toFixed(0) || '0'}
+                                        {formatCurrency(expenseType.monthlyData[month] || 0, currency, 0)}
                                       </div>
                                     </div>
                                   ))}

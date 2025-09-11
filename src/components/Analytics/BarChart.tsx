@@ -11,6 +11,7 @@ import {
 import { Bar } from 'react-chartjs-2'
 import type { ChartOptions } from 'chart.js'
 import { format, parseISO } from 'date-fns'
+import { getCurrencySymbol, formatCurrency } from '../../utils/currency'
 
 ChartJS.register(
   CategoryScale,
@@ -33,6 +34,7 @@ interface BarChartProps {
   data: MonthlyData[]
   title?: string
   showIncome?: boolean
+  currency?: string
   onBarClick?: (monthData: MonthlyData) => void
 }
 
@@ -40,8 +42,10 @@ export default function BarChart({
   data, 
   title = "Monthly Spending Comparison", 
   showIncome = false,
+  currency = 'USD',
   onBarClick 
 }: BarChartProps) {
+  const currencySymbol = getCurrencySymbol(currency)
   const chartData = {
     labels: data.map(item => {
       const date = parseISO(item.month + '-01') // Add day to make valid date
@@ -110,16 +114,16 @@ export default function BarChart({
             
             if (context.dataset.label === 'Expenses') {
               return [
-                `Expenses: $${value.toLocaleString()}`,
+                `Expenses: ${currencySymbol}${value.toLocaleString()}`,
                 `Transactions: ${item.expenseCount}`
               ]
             } else if (context.dataset.label === 'Income') {
               return [
-                `Income: $${value.toLocaleString()}`,
+                `Income: ${currencySymbol}${value.toLocaleString()}`,
                 `Sources: ${item.incomeCount || 0}`
               ]
             }
-            return `${context.dataset.label}: $${value.toLocaleString()}`
+            return `${context.dataset.label}: ${currencySymbol}${value.toLocaleString()}`
           },
           afterBody: function(context) {
             const dataIndex = context[0].dataIndex
@@ -130,7 +134,7 @@ export default function BarChart({
               const isPositive = netIncome >= 0
               return [
                 '',
-                `Net ${isPositive ? 'Savings' : 'Deficit'}: ${isPositive ? '+' : ''}$${netIncome.toLocaleString()}`
+                `Net ${isPositive ? 'Savings' : 'Deficit'}: ${isPositive ? '+' : ''}${currencySymbol}${netIncome.toLocaleString()}`
               ]
             }
             return []
@@ -166,7 +170,7 @@ export default function BarChart({
             family: "'Inter', 'system-ui', 'sans-serif'"
           },
           callback: function(value) {
-            return '$' + Number(value).toLocaleString()
+            return currencySymbol + Number(value).toLocaleString()
           }
         }
       }
@@ -260,16 +264,16 @@ export default function BarChart({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Average</p>
-              <p className="text-lg font-semibold text-gray-900">${averageSpending.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-gray-900">{formatCurrency(averageSpending, currency)}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Highest</p>
-              <p className="text-lg font-semibold text-orange-600">${highestMonth.expenses.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-orange-600">{formatCurrency(highestMonth.expenses, currency)}</p>
               <p className="text-xs text-gray-400">{format(parseISO(highestMonth.month + '-01'), 'MMM yyyy')}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Lowest</p>
-              <p className="text-lg font-semibold text-green-600">${lowestMonth.expenses.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-green-600">{formatCurrency(lowestMonth.expenses, currency)}</p>
               <p className="text-xs text-gray-400">{format(parseISO(lowestMonth.month + '-01'), 'MMM yyyy')}</p>
             </div>
           </div>
