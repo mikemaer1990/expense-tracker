@@ -385,44 +385,91 @@ export default function History() {
             <p className="text-gray-600">View and manage your expenses and income</p>
           </div>
 
-          {/* Filters and Sorting */}
+          {/* Modern Filters and Sorting */}
           <div className="bg-white shadow rounded-lg mb-6 p-4">
-            <div className="flex flex-wrap gap-4">
+            {/* Filter Pills */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Filter Transactions</h3>
+              <div className="flex flex-wrap gap-2 overflow-x-auto">
+                {[
+                  { value: 'all', label: 'All Transactions', count: transactions.length },
+                  { value: 'expenses', label: 'Expenses', count: transactions.filter(t => t.type === 'expense').length },
+                  { value: 'income', label: 'Income', count: transactions.filter(t => t.type === 'income').length }
+                ].map((filterOption) => (
+                  <button
+                    key={filterOption.value}
+                    onClick={() => setFilter(filterOption.value as 'all' | 'expenses' | 'income')}
+                    className={`flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                      filter === filterOption.value
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+                    }`}
+                  >
+                    {filterOption.label}
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                      filter === filterOption.value
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {filterOption.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by</label>
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value as 'all' | 'expenses' | 'income')}
-                  className="border border-gray-300 rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <option value="all">All Transactions</option>
-                  <option value="expenses">Expenses Only</option>
-                  <option value="income">Income Only</option>
-                </select>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Sort By</h3>
+                <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setSortBy('date')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                      sortBy === 'date'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Date
+                  </button>
+                  <button
+                    onClick={() => setSortBy('amount')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                      sortBy === 'amount'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Amount
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'date' | 'amount')}
-                  className="border border-gray-300 rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <option value="date">Date</option>
-                  <option value="amount">Amount</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                  className="border border-gray-300 rounded-md px-3 py-2 cursor-pointer"
-                >
-                  <option value="desc">Newest First</option>
-                  <option value="asc">Oldest First</option>
-                </select>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Order</h3>
+                <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setSortOrder('desc')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                      sortOrder === 'desc'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {sortBy === 'date' ? 'Newest First' : 'Highest First'}
+                  </button>
+                  <button
+                    onClick={() => setSortOrder('asc')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                      sortOrder === 'asc'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {sortBy === 'date' ? 'Oldest First' : 'Lowest First'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

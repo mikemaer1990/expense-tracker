@@ -10,8 +10,10 @@ A modern, mobile-first personal expense tracking application built with React, T
 - **Income Tracking**: Record and manage income sources
 - **Real-time Dashboard**: Live overview with totals and recent transactions
 - **Transaction History**: Comprehensive view of all financial transactions
-- **Analytics**: Visual insights with charts and category breakdowns
-- **Expense Splitting**: Split expenses with friends using Splitwise-style functionality
+- **Analytics Suite**: Interactive charts (Pie, Bar, Line) with monthly/yearly views
+- **Expense Splitting**: 50/50 automatic splitting with "split with" tracking
+- **Custom Expense Types**: Create and manage expense types with icon picker
+- **User Settings**: Multi-currency support, preferences, cross-device sync
 
 ### 🎨 User Experience
 - **Mobile-First Design**: Optimized for mobile devices with responsive layout
@@ -37,6 +39,7 @@ A modern, mobile-first personal expense tracking application built with React, T
 - **Backend**: Supabase (authentication + database + real-time)
 - **Routing**: React Router DOM 7.8.2
 - **Charts**: Chart.js 4.5.0 + React Chart.js 2 5.3.0
+- **Currency**: Multi-currency support (USD, EUR, GBP, CAD, AUD)
 - **Date Handling**: date-fns 4.1.0
 
 ## 🚀 Getting Started
@@ -121,7 +124,7 @@ spendlyzer/
 - **expense_types**: Specific expense types within categories
 - **expenses**: Individual expense transactions with splitting support
 - **income**: Income tracking records
-- **expense_splits**: Track split expenses between users
+- **user_preferences**: Cross-device settings and preferences sync
 
 ### Key Features
 - **Automatic Data Creation**: Default categories and expense types created on user signup
@@ -178,16 +181,21 @@ If you encounter any issues or have questions:
 ## 🚧 Roadmap
 
 ### Upcoming Features
+- [ ] Splitwise OAuth integration (in progress)
 - [ ] Budget tracking and alerts
 - [ ] Recurring expense automation
 - [ ] Export data to CSV/PDF
 - [ ] Dark mode support
-- [ ] Multi-currency support
 - [ ] Receipt photo uploads
+- [x] Multi-currency support ✅ COMPLETED
+- [x] Custom expense type management ✅ COMPLETED
+- [x] Advanced analytics suite ✅ COMPLETED
 
-### Known Limitations
-- Brief category loading flash for new users
-- Filter UI uses basic dropdowns (improvements planned)
+### Recently Fixed
+- ✅ **Internet/Phone Separation**: Successfully separated combined expense types
+- ✅ **Database Integrity**: Cleaned up all duplicate entries and corruption
+- ✅ **User Signup**: Fixed 500 errors with proper RLS policies
+- ✅ **Preferences System**: Complete user preferences with cross-device sync
 
 ---
 

@@ -37,6 +37,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
   const [expenseTypes, setExpenseTypes] = useState<ExpenseType[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [loading, setLoading] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [error, setError] = useState('')
 
   const {
@@ -76,6 +77,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
 
   const loadCategories = async () => {
     try {
+      setCategoriesLoading(true)
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -87,6 +89,8 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
     } catch (error: any) {
       setError('Failed to load categories')
       console.error(error)
+    } finally {
+      setCategoriesLoading(false)
     }
   }
 
@@ -94,14 +98,14 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
     try {
       const { data, error } = await supabase
         .from('expense_types')
-        .select('id, name, icon_name')
+        .select('id, name, icon_name, is_user_created, created_by_user_id')
         .eq('category_id', categoryId)
         .order('name')
 
       if (error) throw error
       setExpenseTypes(data || [])
     } catch (error: any) {
-      console.error(error)
+      console.error('Error loading expense types:', error)
       setExpenseTypes([])
     }
   }
@@ -157,6 +161,20 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading state while categories are being loaded
+  if (categoriesLoading) {
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="mt-3 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-500">Loading categories...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // If no categories exist, show a message

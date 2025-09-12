@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useUserPreferences } from "../../hooks/useUserPreferences";
 import AddExpense from "../Expenses/AddExpense";
@@ -354,14 +354,16 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     onClick={() => setShowAddExpense(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium cursor-pointer"
+                    className="flex items-center justify-center px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800 rounded-md border border-red-200 hover:border-red-300 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   >
+                    <MinusIcon className="w-4 h-4 mr-2" />
                     Add Expense
                   </button>
                   <button
                     onClick={() => setShowAddIncome(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 cursor-pointer"
+                    className="flex items-center justify-center px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 rounded-md border border-green-200 hover:border-green-300 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   >
+                    <PlusIcon className="w-4 h-4 mr-2" />
                     Add Income
                   </button>
                 </div>
