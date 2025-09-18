@@ -1,6 +1,6 @@
-# Spendlyzer
+# Loggy
 
-A modern, mobile-first personal expense tracking application built with React, TypeScript, and Supabase. Spendlyzer helps you manage your finances with comprehensive expense and income tracking, analytics, and a responsive design optimized for mobile devices.
+A modern, mobile-first personal expense tracking application built with React, TypeScript, and Supabase. Loggy helps you manage your finances with comprehensive expense and income tracking, analytics, and a responsive design optimized for mobile devices.
 
 ## ✨ Features
 
@@ -55,7 +55,7 @@ A modern, mobile-first personal expense tracking application built with React, T
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd spendlyzer
+   cd loggy
    ```
 
 2. **Install dependencies**
@@ -88,7 +88,7 @@ A modern, mobile-first personal expense tracking application built with React, T
 ## 📁 Project Structure
 
 ```
-spendlyzer/
+loggy/
 ├── src/
 │   ├── components/
 │   │   ├── Auth/             # Authentication components
@@ -142,7 +142,7 @@ spendlyzer/
 ## 📊 Key Features Deep Dive
 
 ### Expense Splitting
-Spendlyzer includes Splitwise-style expense splitting functionality:
+Loggy includes Splitwise-style expense splitting functionality:
 - Split expenses equally among participants
 - Track who owes whom
 - Settle debts between friends

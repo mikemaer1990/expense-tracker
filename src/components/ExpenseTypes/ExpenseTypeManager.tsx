@@ -201,9 +201,11 @@ export default function ExpenseTypeManager() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Spendlyzer
-              </h1>
+              <img
+                src="/logo.png"
+                alt="Loggy"
+                className="h-10 w-auto mr-2 mb-2"
+              />
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
                 <Link
                   to="/"

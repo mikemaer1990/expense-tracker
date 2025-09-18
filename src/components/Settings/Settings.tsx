@@ -70,9 +70,11 @@ export default function Settings() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Spendlyzer
-              </h1>
+              <img
+                src="/logo.png"
+                alt="Loggy"
+                className="h-10 w-auto mr-2 mb-2"
+              />
               <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
                 <Link
                   to="/"
@@ -216,7 +218,7 @@ export default function Settings() {
                       type="email"
                       value={user?.email || ''}
                       disabled
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Email cannot be changed
@@ -240,10 +242,10 @@ export default function Settings() {
                     </label>
                     <div className="inline-flex bg-gray-100 rounded-md p-1 flex-wrap">
                       {[
+                        { value: 'CAD', label: 'CAD (C$)' },
                         { value: 'USD', label: 'USD ($)' },
                         { value: 'EUR', label: 'EUR (€)' },
                         { value: 'GBP', label: 'GBP (£)' },
-                        { value: 'CAD', label: 'CAD (C$)' },
                         { value: 'AUD', label: 'AUD (A$)' }
                       ].map(currency => (
                         <button
