@@ -206,7 +206,7 @@ export default function Dashboard() {
 
           {/* Mobile menu */}
           <div
-            className={`md:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
+            className={`lg:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
               mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
             }`}
           >
@@ -266,7 +266,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -357,9 +357,9 @@ export default function Dashboard() {
           </div>
 
           <div className="mb-8">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Add Expense Card */}
-              <div className="group rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
+              <div className="group rounded-lg bg-white border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-50/0 to-red-50/100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <button
                   onClick={() => setShowAddExpense(true)}
@@ -374,7 +374,7 @@ export default function Dashboard() {
               </div>
 
               {/* Add Income Card */}
-              <div className="group rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
+              <div className="group rounded-lg bg-white border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 to-green-50/100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <button
                   onClick={() => setShowAddIncome(true)}

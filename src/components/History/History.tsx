@@ -27,6 +27,7 @@ export default function History() {
     deletedTransaction?: any
     deletedType?: 'expense' | 'income'
   }>({ show: false, message: '', type: 'info' })
+  const [expandedNames, setExpandedNames] = useState<Set<string>>(new Set())
 
   const loadExpenseTypes = useCallback(async () => {
     try {
@@ -247,6 +248,18 @@ export default function History() {
     setToast({ show: false, message: '', type: 'info' })
   }
 
+  const toggleExpenseName = (transactionId: string) => {
+    setExpandedNames(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(transactionId)) {
+        newSet.delete(transactionId)
+      } else {
+        newSet.add(transactionId)
+      }
+      return newSet
+    })
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -381,7 +394,7 @@ export default function History() {
       </nav>
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="px-4 py-6 sm:px-0 overflow-hidden">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
             <p className="text-gray-600">View and manage your expenses and income</p>
@@ -487,7 +500,7 @@ export default function History() {
             ) : (
               <>
                 {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-hidden">
+                <div className="hidden lg:block overflow-hidden rounded-lg">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -574,63 +587,95 @@ export default function History() {
 
                 {/* Mobile Card View */}
                 <div className="block lg:hidden">
-                  <div className="space-y-3 p-4">
+                  <div className="space-y-4 p-4 overflow-hidden">
                     {transactions.map((transaction) => (
-                      <div key={`${transaction.type}-${transaction.id}`} className="flex items-start justify-between p-3 border border-gray-200 rounded-lg">
-                        <div className="flex items-start space-x-3 flex-1">
-                          <div className="mt-0.5">
-                            <IconRenderer
-                              iconName={transaction.iconName}
-                              size="sm"
-                              className="text-gray-600"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                  <span>{transaction.subcategory || 'Unknown'}</span>
-                                  {transaction.is_recurring && (
-                                    <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
-                                      🔄
-                                    </span>
+                      <div key={`${transaction.type}-${transaction.id}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 min-w-0">
+                        {/* Top Row: Icon + Name + Amount */}
+                        <div className="bg-blue-50/30 px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <IconRenderer
+                                iconName={transaction.iconName}
+                                size="md"
+                                className="text-gray-600 flex-shrink-0"
+                              />
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <span
+                                  className={`font-medium text-gray-900 cursor-pointer ${
+                                    expandedNames.has(`${transaction.type}-${transaction.id}`)
+                                      ? 'whitespace-normal break-words'
+                                      : 'truncate'
+                                  }`}
+                                  onClick={() => toggleExpenseName(`${transaction.type}-${transaction.id}`)}
+                                >
+                                  {transaction.subcategory || 'Unknown'}
+                                  {!expandedNames.has(`${transaction.type}-${transaction.id}`) &&
+                                   (transaction.subcategory || 'Unknown').length > 20 && (
+                                    <span className="text-blue-500 ml-1 text-sm">⋯</span>
                                   )}
-                                  <span className="text-xs font-normal text-gray-500">• {new Date(transaction.date + 'T00:00:00').toLocaleDateString()}</span>
-                                </p>
-                                <div className="mt-1">
-                                  <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-800">
-                                    {transaction.category}
+                                </span>
+                                {transaction.is_recurring && (
+                                  <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">
+                                    🔄
                                   </span>
-                                </div>
-                                {transaction.description && (
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    {transaction.description}
-                                  </p>
                                 )}
                               </div>
-                              <div className="flex flex-col items-end ml-3">
-                                <p className={`text-sm font-semibold ${
-                                  transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
-                                }`}>
-                                  {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                                </p>
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <button
-                                    onClick={() => handleEdit(transaction)}
-                                    className="text-blue-600 hover:text-blue-900 p-1 cursor-pointer"
-                                    title="Edit transaction"
-                                  >
-                                    <DocumentTextIcon className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(transaction.id, transaction.type)}
-                                    className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
-                                    title="Delete transaction"
-                                  >
-                                    <TrashIcon className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
+                            </div>
+                            <p className={`text-lg font-semibold flex-shrink-0 ${
+                              transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
+                            }`}>
+                              {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Middle Section: Category + Date + Description */}
+                        <div className="px-4 py-3">
+                          {/* Second Row: Category + Date */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-800">
+                              {transaction.category}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(transaction.date + 'T00:00:00').toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          {/* Third Row: Description (if exists) */}
+                          {transaction.description && (
+                            <div>
+                              <p className="text-sm text-gray-600 pl-1">
+                                {transaction.description}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Bottom Row: Action Buttons */}
+                        <div className="bg-gray-50 border-t border-gray-100">
+                          <div className="flex">
+                            {/* Edit Button Section */}
+                            <div className="flex-1 flex items-center justify-center py-3 border-r border-gray-200">
+                              <button
+                                onClick={() => handleEdit(transaction)}
+                                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-100 cursor-pointer transition-colors duration-200"
+                                title="Edit transaction"
+                              >
+                                <DocumentTextIcon className="h-5 w-5" />
+                                <span className="text-sm font-medium">Edit</span>
+                              </button>
+                            </div>
+
+                            {/* Delete Button Section */}
+                            <div className="flex-1 flex items-center justify-center py-3">
+                              <button
+                                onClick={() => handleDelete(transaction.id, transaction.type)}
+                                className="flex items-center space-x-2 text-red-600 hover:text-red-700 p-2 rounded-md hover:bg-red-100 cursor-pointer transition-colors duration-200"
+                                title="Delete transaction"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                                <span className="text-sm font-medium">Delete</span>
+                              </button>
                             </div>
                           </div>
                         </div>

@@ -308,7 +308,7 @@ export default function Analytics() {
             </div>
           </div>
 
-          <div className={`md:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
+          <div className={`lg:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
             mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}>
             <div className="px-2 pt-2 pb-3 space-y-1">
