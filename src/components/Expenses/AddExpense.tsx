@@ -68,6 +68,14 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
     }
   }, [user])
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
   useEffect(() => {
     if (watchedCategoryId) {
       setSelectedCategoryId(watchedCategoryId)
@@ -166,8 +174,10 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
   // Show loading state while categories are being loaded
   if (categoriesLoading) {
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="relative mx-auto border shadow-lg bg-white
+                        min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                        md:top-20 md:w-96 md:min-h-0 md:p-5 md:rounded-md">
           <div className="mt-3 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-2 text-sm text-gray-500">Loading categories...</p>
@@ -180,8 +190,10 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
   // If no categories exist, show a message
   if (categories.length === 0) {
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="relative mx-auto border shadow-lg bg-white
+                        min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                        md:top-20 md:w-96 md:min-h-0 md:p-5 md:rounded-md">
           <div className="mt-3 text-center">
             <h3 className="text-lg font-medium text-gray-900">No Categories Found</h3>
             <p className="mt-2 text-sm text-gray-500">
@@ -190,7 +202,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
             <div className="mt-4">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                className="px-4 py-3 md:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 min-h-[48px] font-medium cursor-pointer"
               >
                 Close
               </button>
@@ -202,8 +214,14 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative mx-auto border shadow-lg bg-white
+                      /* Mobile: Full screen with slide-up animation */
+                      min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                      /* Desktop: Centered modal with fade animation */
+                      md:top-20 md:w-96 md:max-h-[80vh] md:min-h-0 md:p-5 md:rounded-md md:overflow-y-auto
+                      /* Animation classes */
+                      transform transition-all duration-300 ease-out">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 text-center mb-4">
             Add New Expense
@@ -214,7 +232,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
               <label className="block text-sm font-medium text-gray-700">Category</label>
               <select
                 {...register('category_id', { required: 'Please select a category' })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
               >
                 <option value="">Select a category</option>
                 {categories.map((category) => (
@@ -233,7 +251,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
               <select
                 {...register('expense_type_id', { required: 'Please select an expense type' })}
                 disabled={!selectedCategoryId || expenseTypes.length === 0}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer min-h-[44px]"
               >
                 <option value="">Select an expense type</option>
                 {expenseTypes.map((type) => (
@@ -255,8 +273,9 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                   min: { value: 0.01, message: 'Amount must be greater than 0' }
                 })}
                 type="number"
+                inputMode="decimal"
                 step="0.01"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 placeholder="0.00"
               />
               {errors.amount && (
@@ -285,7 +304,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                           required: isSplit ? 'Please specify who you\'re splitting with' : false 
                         })}
                         type="text"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                         placeholder="e.g., GF, Roommate, Friend"
                       />
                       {errors.split_with && (
@@ -324,7 +343,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                 <input
                   {...register('date', { required: !isRecurring ? 'Date is required' : false })}
                   type="date"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 />
                 {errors.date && (
                   <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>
@@ -339,7 +358,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                   <label className="block text-sm font-medium text-gray-700">Frequency</label>
                   <select
                     {...register('recurring_frequency', { required: isRecurring ? 'Frequency is required' : false })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   >
                     <option value="">Select frequency</option>
                     <option value="weekly">Weekly</option>
@@ -358,7 +377,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                   <input
                     {...register('recurring_start_date', { required: isRecurring ? 'Start date is required' : false })}
                     type="date"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   />
                   {errors.recurring_start_date && (
                     <p className="mt-1 text-sm text-red-600">{errors.recurring_start_date.message}</p>
@@ -370,7 +389,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                   <input
                     {...register('recurring_end_date')}
                     type="date"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   />
                   <p className="mt-1 text-xs text-gray-500">Leave empty for ongoing expense</p>
                 </div>
@@ -382,7 +401,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
               <textarea
                 {...register('description')}
                 rows={2}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 placeholder="Additional details about this expense..."
               />
             </div>
@@ -402,18 +421,18 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                className="flex-1 px-4 py-3 md:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 min-h-[48px] font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
+                className="flex-1 px-4 py-3 md:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 min-h-[48px] font-medium cursor-pointer"
               >
                 {loading ? 'Adding...' : isRecurring ? 'Set Up Recurring Expense' : 'Add Expense'}
               </button>

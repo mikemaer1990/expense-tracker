@@ -89,6 +89,14 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
     }, 200) // Match the animation duration
   }
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
   useEffect(() => {
     // Set form value immediately since expense types are pre-loaded
     if (expense.expense_type_id) {
@@ -155,12 +163,18 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   }, {} as Record<string, ExpenseType[]>)
 
   return (
-    <div 
-      className={`fixed inset-0 bg-gray-600 overflow-y-auto h-full w-full transition-opacity duration-200 ${isVisible ? 'bg-opacity-50 opacity-100' : 'bg-opacity-0 opacity-0'}`}
+    <div
+      className={`fixed inset-0 bg-gray-600 overflow-y-auto h-full w-full z-50 transition-opacity duration-200 ${isVisible ? 'bg-opacity-50 opacity-100' : 'bg-opacity-0 opacity-0'}`}
       onClick={handleClose}
     >
-      <div 
-        className={`relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto transform transition-all duration-200 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 -translate-y-4'}`}
+      <div
+        className={`relative mx-auto border shadow-lg bg-white
+                    /* Mobile: Full screen with slide-up animation */
+                    min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                    /* Desktop: Centered modal with fade animation */
+                    md:top-20 md:w-96 md:max-h-[80vh] md:min-h-0 md:p-5 md:rounded-md md:overflow-y-auto
+                    /* Animation classes */
+                    transform transition-all duration-200 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 -translate-y-4'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mt-3">
@@ -174,7 +188,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               <label className="block text-sm font-medium text-gray-700">Expense Type</label>
               <select
                 {...register('expense_type_id', { required: 'Please select an expense type' })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
               >
                 <option value="">Select an expense type</option>
                 {Object.entries(groupedTypes).map(([category, types]) => (
@@ -201,8 +215,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                   min: { value: 0.01, message: 'Amount must be greater than 0' }
                 })}
                 type="number"
+                inputMode="decimal"
                 step="0.01"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 placeholder="0.00"
               />
               {errors.amount && (
@@ -231,7 +246,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                           required: isSplit ? 'Please specify who you\'re splitting with' : false 
                         })}
                         type="text"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                         placeholder="e.g., GF, Roommate, Friend"
                       />
                       {errors.split_with && (
@@ -270,7 +285,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                 <input
                   {...register('date', { required: !isRecurring ? 'Date is required' : false })}
                   type="date"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 />
                 {errors.date && (
                   <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>
@@ -285,7 +300,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                   <label className="block text-sm font-medium text-gray-700">Frequency</label>
                   <select
                     {...register('recurring_frequency', { required: isRecurring ? 'Frequency is required' : false })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   >
                     <option value="">Select frequency</option>
                     <option value="weekly">Weekly</option>
@@ -304,7 +319,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                   <input
                     {...register('recurring_start_date', { required: isRecurring ? 'Start date is required' : false })}
                     type="date"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   />
                   {errors.recurring_start_date && (
                     <p className="mt-1 text-sm text-red-600">{errors.recurring_start_date.message}</p>
@@ -316,7 +331,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                   <input
                     {...register('recurring_end_date')}
                     type="date"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                   />
                   <p className="mt-1 text-xs text-gray-500">Leave empty for ongoing expense</p>
                 </div>
@@ -329,7 +344,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               <textarea
                 {...register('description')}
                 rows={2}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px]"
                 placeholder="Additional details about this expense..."
               />
             </div>
@@ -349,18 +364,18 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 pt-2">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                className="flex-1 px-4 py-3 md:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 min-h-[48px] font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="flex-1 px-4 py-3 md:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] font-medium cursor-pointer"
               >
                 {loading ? 'Updating...' : isRecurring ? 'Update Recurring Expense' : 'Update Expense'}
               </button>

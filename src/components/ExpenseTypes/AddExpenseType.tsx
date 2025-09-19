@@ -97,6 +97,14 @@ export default function AddExpenseType({
     }, 200)
   }
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
   const handleIconSelect = (iconName: string) => {
     setSelectedIcon(iconName)
     setValue('icon_name', iconName)
@@ -152,8 +160,14 @@ export default function AddExpenseType({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div 
-        className={`relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white transform transition-all duration-200 ease-in-out ${
+      <div
+        className={`relative mx-auto border shadow-lg bg-white
+                    /* Mobile: Full screen with slide-up animation */
+                    min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                    /* Desktop: Centered modal with fade animation */
+                    md:top-20 md:w-full md:max-w-2xl md:min-h-0 md:p-5 md:rounded-md md:overflow-y-auto
+                    /* Animation classes */
+                    transform transition-all duration-200 ease-in-out ${
           isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
       >
@@ -176,7 +190,7 @@ export default function AddExpenseType({
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select
               {...register('category_id', { required: 'Please select a category' })}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+              className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px] cursor-pointer"
             >
               <option value="">Select a category</option>
               {categories.map(category => (
@@ -200,7 +214,7 @@ export default function AddExpenseType({
                 maxLength: { value: 50, message: 'Name must be less than 50 characters' }
               })}
               type="text"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-text"
+              className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[44px] cursor-text"
               placeholder="e.g., Netflix, Gym Membership, Car Insurance"
             />
             {errors.name && (
@@ -255,7 +269,7 @@ export default function AddExpenseType({
                   selectedIcon={selectedIcon}
                   onIconSelect={handleIconSelect}
                   usedIcons={usedIcons}
-                  className="max-h-96"
+                  className="max-h-[75vh] md:max-h-96"
                 />
               </div>
             )}
@@ -287,14 +301,14 @@ export default function AddExpenseType({
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors duration-200 cursor-pointer"
+              className="flex-1 px-4 py-3 md:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors duration-200 cursor-pointer min-h-[48px] font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !selectedIcon}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
+              className="flex-1 px-4 py-3 md:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer min-h-[48px] font-medium"
             >
               {loading ? 'Creating...' : 'Create Expense Type'}
             </button>

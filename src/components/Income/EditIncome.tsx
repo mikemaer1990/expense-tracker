@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { supabase } from '../../lib/supabase'
 
@@ -37,6 +37,14 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
 
   const isRecurring = watch('is_recurring')
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
   const onSubmit = async (data: IncomeForm) => {
     try {
       setError('')
@@ -65,8 +73,14 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full transition-opacity duration-200 opacity-100">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto transform transition-all duration-300 scale-100 translate-y-0">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 transition-opacity duration-200 opacity-100">
+      <div className="relative mx-auto border shadow-lg bg-white
+                      /* Mobile: Full screen with slide-up animation */
+                      min-h-screen w-full p-4 pt-8 pb-8 rounded-none
+                      /* Desktop: Centered modal with fade animation */
+                      md:top-20 md:w-96 md:max-h-[80vh] md:min-h-0 md:p-5 md:rounded-md md:overflow-y-auto
+                      /* Animation classes */
+                      transform transition-all duration-300 scale-100 translate-y-0">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 text-center mb-4">
             Edit Income
@@ -79,7 +93,7 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               <input
                 {...register('source', { required: 'Income source is required' })}
                 type="text"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 min-h-[44px]"
                 placeholder="e.g., Salary, Freelance, Investment"
               />
               {errors.source && (
@@ -96,8 +110,9 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
                   min: { value: 0.01, message: 'Amount must be greater than 0' }
                 })}
                 type="number"
+                inputMode="decimal"
                 step="0.01"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 min-h-[44px]"
                 placeholder="0.00"
               />
               {errors.amount && (
@@ -111,7 +126,7 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               <input
                 {...register('date', { required: 'Date is required' })}
                 type="date"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 min-h-[44px]"
               />
               {errors.date && (
                 <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>
@@ -136,7 +151,7 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               <textarea
                 {...register('description')}
                 rows={2}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 min-h-[44px]"
                 placeholder="Additional details about this income..."
               />
             </div>
@@ -155,18 +170,18 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                className="flex-1 px-4 py-3 md:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 min-h-[48px] font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                className="flex-1 px-4 py-3 md:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] font-medium cursor-pointer"
               >
                 {loading ? 'Updating...' : 'Update Income'}
               </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { PlusIcon, PencilIcon, TrashIcon, Cog6ToothIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon, TrashIcon, Cog6ToothIcon, Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import IconRenderer from '../UI/IconRenderer'
@@ -38,6 +38,7 @@ export default function ExpenseTypeManager() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingExpenseType, setEditingExpenseType] = useState<ExpenseType | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [showFilters, setShowFilters] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [toast, setToast] = useState<{
     show: boolean
@@ -321,14 +322,14 @@ export default function ExpenseTypeManager() {
           <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Manage Expense Types</h1>
-            <p className="text-gray-600">Organize your expenses with custom categories and icons</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Manage Expense Types</h1>
+            <p className="text-sm md:text-base text-gray-600">Organize your expenses with custom categories and icons</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 cursor-pointer"
+            className="flex items-center justify-center space-x-2 w-full md:w-auto px-4 py-3 md:py-2 min-h-[48px] bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 cursor-pointer font-medium"
           >
             <PlusIcon className="h-4 w-4" />
             <span>Add Expense Type</span>
@@ -338,7 +339,66 @@ export default function ExpenseTypeManager() {
 
       {/* Category Filter */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
+        {/* Mobile Collapsible Filter */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md bg-white min-h-[44px] text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+          >
+            <span className="font-medium">
+              Filter by Category
+              {selectedCategory !== 'all' && (
+                <span className="ml-2 text-sm text-blue-600">
+                  ({categories.find(c => c.id === selectedCategory)?.name || 'All'})
+                </span>
+              )}
+            </span>
+            <ChevronDownIcon className={`h-5 w-5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showFilters && (
+            <div className="mt-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setShowFilters(false);
+                }}
+                className={`w-full flex items-center justify-start px-4 py-3 rounded-md transition-colors duration-200 min-h-[44px] ${
+                  selectedCategory === 'all'
+                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                All Categories ({expenseTypes.length})
+              </button>
+              {categories.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setShowFilters(false);
+                  }}
+                  className={`w-full flex items-center justify-start space-x-3 px-4 py-3 rounded-md transition-colors duration-200 min-h-[44px] ${
+                    selectedCategory === category.id
+                      ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span>
+                    {category.name} ({expenseTypes.filter(et => et.category_id === category.id).length})
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Pills - Keep Current Implementation */}
+        <div className="hidden md:flex md:flex-wrap md:gap-2">
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
@@ -359,7 +419,7 @@ export default function ExpenseTypeManager() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
               }`}
             >
-              <div 
+              <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: category.color }}
               />

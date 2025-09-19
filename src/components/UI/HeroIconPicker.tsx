@@ -54,9 +54,9 @@ export default function HeroIconPicker({
   }
   
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-lg ${className}`}>
+    <div className={`bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col ${className}`}>
       {/* Header with search */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -75,15 +75,15 @@ export default function HeroIconPicker({
             </button>
           )}
         </div>
-        
+
         {/* Category tabs */}
         {!searchQuery && (
-          <div className="mt-3 flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+          <div className="mt-3 flex gap-1 overflow-x-auto md:flex-wrap md:overflow-x-visible max-h-20 md:max-h-32 pb-1">
             {categories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                className={`px-3 py-1 text-xs rounded-full transition-colors flex-shrink-0 ${
                   selectedCategory === category
                     ? 'bg-blue-100 text-blue-800 border border-blue-200'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
@@ -95,9 +95,9 @@ export default function HeroIconPicker({
           </div>
         )}
       </div>
-      
+
       {/* Icon grid */}
-      <div className="p-4 max-h-80 overflow-y-auto">
+      <div className="p-4 flex-1 overflow-y-auto min-h-0">
         {filteredIcons.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-300 mb-2" />
@@ -107,7 +107,7 @@ export default function HeroIconPicker({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
             {filteredIcons.map((icon) => {
               const isSelected = selectedIcon === icon.name
               const isUsed = usedIcons.includes(icon.name) && !isSelected

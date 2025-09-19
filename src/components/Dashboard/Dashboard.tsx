@@ -265,7 +265,44 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="px-4 pb-6 sm:px-0">
+          {/* Add Expense/Income Buttons - Mobile Optimized */}
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {/* Add Expense Button */}
+              <button
+                onClick={() => setShowAddExpense(true)}
+                className="group w-full flex items-center justify-center space-x-2 md:space-x-3 bg-white border border-gray-200 rounded-lg p-3 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden relative hover:bg-gradient-to-br hover:from-red-50/0 hover:to-red-50/100"
+              >
+                <div className="relative flex items-center space-x-2 md:space-x-3">
+                  <div className="rounded-full bg-red-100 p-2 md:p-3 group-hover:bg-red-200 transition-all duration-300">
+                    <MinusIcon className="h-4 w-4 md:h-6 md:w-6 text-red-600 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="flex flex-col items-start md:items-center">
+                    <span className="font-medium text-gray-900 text-sm md:text-base group-hover:text-red-800 transition-all duration-300">Add Expense</span>
+                    <span className="hidden md:block text-xs md:text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">Record a purchase</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Add Income Button */}
+              <button
+                onClick={() => setShowAddIncome(true)}
+                className="group w-full flex items-center justify-center space-x-2 md:space-x-3 bg-white border border-gray-200 rounded-lg p-3 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden relative hover:bg-gradient-to-br hover:from-green-50/0 hover:to-green-50/100"
+              >
+                <div className="relative flex items-center space-x-2 md:space-x-3">
+                  <div className="rounded-full bg-green-100 p-2 md:p-3 group-hover:bg-green-200 transition-all duration-300">
+                    <PlusIcon className="h-4 w-4 md:h-6 md:w-6 text-green-600 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="flex flex-col items-start md:items-center">
+                    <span className="font-medium text-gray-900 text-sm md:text-base group-hover:text-green-800 transition-all duration-300">Add Income</span>
+                    <span className="hidden md:block text-xs md:text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">Record earnings</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -356,40 +393,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Add Expense Card */}
-              <div className="group rounded-lg bg-white border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-50/0 to-red-50/100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <button
-                  onClick={() => setShowAddExpense(true)}
-                  className="relative w-full flex flex-col items-center space-y-3 cursor-pointer"
-                >
-                  <div className="rounded-full bg-red-100 p-3 group-hover:bg-red-200 transition-all duration-300">
-                    <MinusIcon className="h-6 w-6 text-red-600 group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <span className="font-medium text-gray-900 group-hover:text-red-800 transition-all duration-300">Add Expense</span>
-                  <span className="text-sm text-gray-500 text-center group-hover:text-gray-700 transition-colors duration-300">Record a purchase</span>
-                </button>
-              </div>
-
-              {/* Add Income Card */}
-              <div className="group rounded-lg bg-white border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 to-green-50/100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <button
-                  onClick={() => setShowAddIncome(true)}
-                  className="relative w-full flex flex-col items-center space-y-3 cursor-pointer"
-                >
-                  <div className="rounded-full bg-green-100 p-3 group-hover:bg-green-200 transition-all duration-300">
-                    <PlusIcon className="h-6 w-6 text-green-600 group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <span className="font-medium text-gray-900 group-hover:text-green-800 transition-all duration-300">Add Income</span>
-                  <span className="text-sm text-gray-500 text-center group-hover:text-gray-700 transition-colors duration-300">Record earnings</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="mt-8 bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -406,49 +409,70 @@ export default function Dashboard() {
                     {recentExpenses.map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                        className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 min-w-0"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <IconRenderer
-                              iconName={
-                                expense.expense_types?.icon_name ||
-                                "QuestionMarkCircleIcon"
-                              }
-                              size="md"
-                              className="text-gray-600"
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                              <span>
-                                {expense.expense_types?.name || "Unknown"}
-                              </span>
-                              {expense.is_recurring && (
-                                <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
-                                  🔄 Recurring
+                        {/* Top Row: Icon + Name + Amount */}
+                        <div className="bg-blue-50/30 px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <IconRenderer
+                                iconName={expense.expense_types?.icon_name || "QuestionMarkCircleIcon"}
+                                size="md"
+                                className="text-gray-600 flex-shrink-0"
+                              />
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <span className="font-medium text-gray-900 truncate">
+                                  {expense.expense_types?.name || "Unknown"}
                                 </span>
+                                {expense.is_recurring && (
+                                  <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">
+                                    🔄 Recurring
+                                  </span>
+                                )}
+                                {expense.is_split && (
+                                  <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0">
+                                    👥 Split
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <div className="font-semibold text-gray-900">
+                                {formatCurrency(expense.amount || 0, preferences.currency)}
+                              </div>
+                              {expense.is_split && expense.original_amount && (
+                                <div className="text-xs text-gray-500">
+                                  of {formatCurrency(expense.original_amount, preferences.currency)}
+                                </div>
                               )}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {expense.expense_types?.categories?.name ||
-                                "Unknown Category"}{" "}
-                              • {expense.date}
-                            </p>
-                            {expense.description && (
-                              <p className="text-xs text-gray-400 mt-1">
-                                {expense.description}
-                              </p>
-                            )}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
-                            {formatCurrency(
-                              expense.amount || 0,
-                              preferences.currency
-                            )}
-                          </p>
+
+                        {/* Bottom Row: Details */}
+                        <div className="px-4 py-3 bg-gray-50/50">
+                          <div className="flex items-center justify-between text-sm text-gray-600">
+                            <div className="flex items-center space-x-4">
+                              <span className="flex items-center space-x-1">
+                                <CalendarDaysIcon className="h-4 w-4" />
+                                <span>{expense.date}</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <ClipboardDocumentListIcon className="h-4 w-4" />
+                                <span>{expense.expense_types?.categories?.name || "Unknown Category"}</span>
+                              </span>
+                            </div>
+                          </div>
+                          {expense.description && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              <span className="text-gray-500">Note:</span> {expense.description}
+                            </div>
+                          )}
+                          {expense.is_split && expense.split_with && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              <span className="text-gray-500">Split with:</span> {expense.split_with}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
