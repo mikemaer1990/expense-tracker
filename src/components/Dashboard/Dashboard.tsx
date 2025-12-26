@@ -296,6 +296,33 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 pb-6 sm:px-0">
+          {/* Page Header with Year Selector */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">Overview of your finances</p>
+              {availableYears.length > 1 && (
+                <div className="flex bg-gray-100 rounded-md p-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedYear(year)}
+                      className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
+                        selectedYear === year
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Add Expense/Income Buttons - Mobile Optimized */}
           <div className="mb-6">
             <div className="grid grid-cols-2 gap-3 md:gap-4">
@@ -332,32 +359,6 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-
-          {/* Year Selector - Only show if multiple years available */}
-          {availableYears.length > 1 && (
-            <div className="mb-4">
-              <div className="bg-white rounded-lg shadow-sm p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Viewing:</span>
-                  <div className="flex bg-gray-100 rounded-md p-1">
-                    {availableYears.map(year => (
-                      <button
-                        key={year}
-                        onClick={() => setSelectedYear(year)}
-                        className={`px-3 py-1 text-sm font-medium rounded transition-all cursor-pointer ${
-                          selectedYear === year
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">

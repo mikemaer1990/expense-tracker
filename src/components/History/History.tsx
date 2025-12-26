@@ -436,6 +436,28 @@ export default function History() {
 
           {/* Modern Filters and Sorting */}
           <div className="bg-white shadow rounded-lg mb-6 p-4">
+            {/* Year Filter - First and most prominent */}
+            {availableYears.length > 1 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Year</h3>
+                <div className="inline-flex bg-gray-100 rounded-md p-1">
+                  {availableYears.map(year => (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedYear(year)}
+                      className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
+                        selectedYear === year
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Filter Pills */}
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Filter Transactions</h3>
@@ -520,28 +542,6 @@ export default function History() {
                   </button>
                 </div>
               </div>
-
-              {/* Year Filter */}
-              {availableYears.length > 1 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Year</h3>
-                  <div className="inline-flex bg-gray-100 rounded-lg p-1">
-                    {availableYears.map(year => (
-                      <button
-                        key={year}
-                        onClick={() => setSelectedYear(year)}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
-                          selectedYear === year
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
