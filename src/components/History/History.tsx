@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { DocumentTextIcon, TrashIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { getYearStartDate, getYearEndDate, getAvailableYears } from '../../utils/date'
 import EditExpense from '../Expenses/EditExpense'
 import EditIncome from '../Income/EditIncome'
 import IconRenderer from '../UI/IconRenderer'
@@ -28,6 +29,8 @@ export default function History() {
     deletedType?: 'expense' | 'income'
   }>({ show: false, message: '', type: 'info' })
   const [expandedNames, setExpandedNames] = useState<Set<string>>(new Set())
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [availableYears, setAvailableYears] = useState<number[]>([])
 
   const loadExpenseTypes = useCallback(async () => {
     try {
@@ -84,6 +87,8 @@ export default function History() {
             )
           `)
           .eq('user_id', user.id)
+          .gte('date', getYearStartDate(selectedYear))
+          .lte('date', getYearEndDate(selectedYear))
           .order('date', { ascending: sortOrder === 'asc' })
           .order('created_at', { ascending: sortOrder === 'asc' })
 
@@ -105,6 +110,8 @@ export default function History() {
           .from('income')
           .select('id, amount, description, date, created_at, source, is_recurring')
           .eq('user_id', user.id)
+          .gte('date', getYearStartDate(selectedYear))
+          .lte('date', getYearEndDate(selectedYear))
           .order('date', { ascending: sortOrder === 'asc' })
           .order('created_at', { ascending: sortOrder === 'asc' })
 
@@ -135,12 +142,30 @@ export default function History() {
       }
 
       setTransactions(allTransactions)
+
+      // Extract available years from all transactions
+      const { data: allExpensesForYears } = await supabase
+        .from('expenses')
+        .select('date')
+        .eq('user_id', user.id)
+
+      const { data: allIncomeForYears } = await supabase
+        .from('income')
+        .select('date')
+        .eq('user_id', user.id)
+
+      const allDates = [
+        ...(allExpensesForYears?.map(e => e.date) || []),
+        ...(allIncomeForYears?.map(i => i.date) || [])
+      ]
+
+      setAvailableYears(getAvailableYears(allDates))
     } catch (error) {
       console.error('Error loading transactions:', error)
     } finally {
       setLoading(false)
     }
-  }, [user, filter, sortBy, sortOrder])
+  }, [user, filter, sortBy, sortOrder, selectedYear])
 
   useEffect(() => {
     if (user) {
@@ -148,6 +173,13 @@ export default function History() {
       loadTransactions()
     }
   }, [user, loadExpenseTypes, loadTransactions])
+
+  // Auto-select most recent year if current year has no data
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0])
+    }
+  }, [availableYears, selectedYear])
 
   const handleEdit = (transaction: any) => {
     setEditingTransaction(transaction)
@@ -396,7 +428,9 @@ export default function History() {
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0 overflow-hidden">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Transaction History{availableYears.length > 1 ? ` (${selectedYear})` : ''}
+            </h1>
             <p className="text-gray-600">View and manage your expenses and income</p>
           </div>
 
@@ -486,6 +520,28 @@ export default function History() {
                   </button>
                 </div>
               </div>
+
+              {/* Year Filter */}
+              {availableYears.length > 1 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Year</h3>
+                  <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                    {availableYears.map(year => (
+                      <button
+                        key={year}
+                        onClick={() => setSelectedYear(year)}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                          selectedYear === year
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -18,6 +18,7 @@ import IconRenderer from "../UI/IconRenderer";
 import UserDropdown from "../UI/UserDropdown";
 import { supabase } from "../../lib/supabase";
 import { formatCurrency } from "../../utils/currency";
+import { getYearStartDate, getYearEndDate, getAvailableYears } from "../../utils/date";
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -31,14 +32,18 @@ export default function Dashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   const loadDashboardData = useCallback(async () => {
     try {
-      // Get total expenses
+      // Get total expenses for selected year
       const { data: allExpenses, error: totalError } = await supabase
         .from("expenses")
-        .select("amount")
-        .eq("user_id", user!.id);
+        .select("amount, date")
+        .eq("user_id", user!.id)
+        .gte("date", getYearStartDate(selectedYear))
+        .lte("date", getYearEndDate(selectedYear));
 
       if (totalError) throw totalError;
 
@@ -46,6 +51,17 @@ export default function Dashboard() {
         allExpenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
       setTotalExpenses(total);
       setExpenseCount(allExpenses?.length || 0);
+
+      // Extract available years from all expenses
+      const { data: allExpensesForYears, error: yearsError } = await supabase
+        .from("expenses")
+        .select("date")
+        .eq("user_id", user!.id);
+
+      if (!yearsError && allExpensesForYears) {
+        const dates = allExpensesForYears.map(e => e.date);
+        setAvailableYears(getAvailableYears(dates));
+      }
 
       // Get current month expenses
       const now = new Date();
@@ -81,6 +97,9 @@ export default function Dashboard() {
           description,
           date,
           is_recurring,
+          is_split,
+          original_amount,
+          split_with,
           expense_types (
             name,
             icon_name,
@@ -92,6 +111,8 @@ export default function Dashboard() {
         `
         )
         .eq("user_id", user!.id)
+        .gte("date", getYearStartDate(selectedYear))
+        .lte("date", getYearEndDate(selectedYear))
         .order("date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(5);
@@ -99,11 +120,13 @@ export default function Dashboard() {
       if (recentError) throw recentError;
       setRecentExpenses(recentData || []);
 
-      // Get total income
+      // Get total income for selected year
       const { data: incomeData, error: incomeError } = await supabase
         .from("income")
         .select("amount")
-        .eq("user_id", user!.id);
+        .eq("user_id", user!.id)
+        .gte("date", getYearStartDate(selectedYear))
+        .lte("date", getYearEndDate(selectedYear));
 
       if (incomeError) throw incomeError;
 
@@ -113,13 +136,20 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     }
-  }, [user]);
+  }, [user, selectedYear]);
 
   useEffect(() => {
     if (user) {
       loadDashboardData();
     }
   }, [user, loadDashboardData]);
+
+  // Auto-select most recent year if current year has no data
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0]);
+    }
+  }, [availableYears, selectedYear]);
 
   const handleSignOut = async () => {
     try {
@@ -302,6 +332,32 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+
+          {/* Year Selector - Only show if multiple years available */}
+          {availableYears.length > 1 && (
+            <div className="mb-4">
+              <div className="bg-white rounded-lg shadow-sm p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Viewing:</span>
+                  <div className="flex bg-gray-100 rounded-md p-1">
+                    {availableYears.map(year => (
+                      <button
+                        key={year}
+                        onClick={() => setSelectedYear(year)}
+                        className={`px-3 py-1 text-sm font-medium rounded transition-all cursor-pointer ${
+                          selectedYear === year
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
