@@ -2,29 +2,19 @@
 
 ## 🎯 **Current Priority Features**
 
-### 1. 📊 **Excel Spreadsheet Import Feature** 🔥 TOP PRIORITY
-**Priority**: CRITICAL
-**Status**: ⏳ **PLANNED - READY TO IMPLEMENT**
-**Plan Document**: `~/.claude/plans/generic-juggling-acorn.md`
-**Description**: Build 4-step wizard to import Excel budget spreadsheet data
-**Target File**: "Testing Copy of 2025 Budget Spreadsheet.xlsx"
+### 1. ✅ **Historical Data Import** - COMPLETED
+**Status**: ✅ **COMPLETED** (December 27, 2025)
+**Approach**: One-time import script (not a permanent UI feature)
+**Description**: Imported historical 2025 budget spreadsheet data into Loggy
 
-**Implementation Phases**:
-- Phase 1: Foundation (4-6h) - Install xlsx, create types, build parser
-- Phase 2: UI Components (8-10h) - Build 4-step wizard modal
-- Phase 3: Import Logic (4-6h) - Validation, batch insert, error handling
-- Phase 4: Polish (4-6h) - Mobile responsive, testing, edge cases
+**Results**:
+- ✅ Imported 28 income records across 4 sources (Wages, Bonus/Gift, Other, Roommates)
+- ✅ Imported 182 expense records across 21 expense types
+- ✅ Created 12 custom expense types (Car Payment, Wifi/Phone, Bike, Coffee, Clothes, Health, George, etc.)
+- ✅ All transactions dated as 1st of each month (Jan-Dec 2025)
+- ✅ Data successfully mapped to Fixed, Variable, and Optional categories
 
-**Key Features**:
-- Auto-map spreadsheet items to expense types (70%+ accuracy)
-- Create 1 transaction per month (date = 1st of each month)
-- Handle split expenses (e.g., "George")
-- Batch import with progress tracking
-- Full error handling and duplicate detection
-
-**Files to Create**: 10 new files (3 core logic, 6 UI components, 1 types)
-**Files to Modify**: Settings.tsx (add import button)
-**Estimated Total**: 20-28 hours
+**Note**: Used disposable Node.js script instead of building full UI feature since this was a one-time historical import need.
 
 ---
 
