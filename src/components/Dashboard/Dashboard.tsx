@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import {
-  Bars3Icon,
-  XMarkIcon,
   PlusIcon,
   MinusIcon,
   CreditCardIcon,
@@ -15,13 +12,14 @@ import { useUserPreferences } from "../../hooks/useUserPreferences";
 import AddExpense from "../Expenses/AddExpense";
 import AddIncome from "../Income/AddIncome";
 import IconRenderer from "../UI/IconRenderer";
-import UserDropdown from "../UI/UserDropdown";
+import Navigation from "../UI/Navigation";
 import { supabase } from "../../lib/supabase";
 import { formatCurrency } from "../../utils/currency";
 import { getYearStartDate, getYearEndDate, getAvailableYears } from "../../utils/date";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { preferences } = useUserPreferences();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
@@ -31,7 +29,6 @@ export default function Dashboard() {
   const [expenseCount, setExpenseCount] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
 
@@ -151,148 +148,13 @@ export default function Dashboard() {
     }
   }, [availableYears, selectedYear]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   const handleExpenseAdded = () => {
     loadDashboardData(); // Refresh the data
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="Loggy"
-                className="h-10 w-auto mr-2 mb-2"
-              />
-              {/* Desktop Navigation */}
-              <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
-                <Link
-                  to="/"
-                  className="text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/history"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  History
-                </Link>
-                <Link
-                  to="/analytics"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  to="/expense-types"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Expense Types
-                </Link>
-              </div>
-            </div>
-
-            {/* Desktop User Menu */}
-            <div className="hidden lg:flex lg:items-center">
-              <UserDropdown onSignOut={handleSignOut} />
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="lg:hidden flex items-center">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-700 hover:text-gray-900 p-2 cursor-pointer"
-              >
-                <div className="relative w-6 h-6">
-                  <Bars3Icon
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen
-                        ? "opacity-0 rotate-90"
-                        : "opacity-100 rotate-0"
-                    }`}
-                  />
-                  <XMarkIcon
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen
-                        ? "opacity-100 rotate-0"
-                        : "opacity-0 -rotate-90"
-                    }`}
-                  />
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu */}
-          <div
-            className={`lg:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
-              mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                to="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/history"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                History
-              </Link>
-              <Link
-                to="/analytics"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Analytics
-              </Link>
-              <Link
-                to="/expense-types"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Expense Types
-              </Link>
-              <Link
-                to="/settings"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Settings
-              </Link>
-              <div className="border-t border-gray-200 pt-3">
-                <div className="px-3 py-2">
-                  <span className="text-sm text-gray-700">
-                    Welcome, {user?.email}
-                  </span>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 pb-6 sm:px-0">
@@ -452,9 +314,17 @@ export default function Dashboard() {
 
           <div className="mt-8 bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Recent Expenses
-              </h3>
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Recent Expenses
+                </h3>
+                <Link
+                  to="/history"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View All →
+                </Link>
+              </div>
               <div className="mt-5">
                 {recentExpenses.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
@@ -462,74 +332,35 @@ export default function Dashboard() {
                     expense!
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {recentExpenses.map((expense) => (
                       <div
                         key={expense.id}
-                        className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 min-w-0"
+                        className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer"
+                        onClick={() => window.location.href = '/history'}
                       >
-                        {/* Top Row: Icon + Name + Amount */}
-                        <div className="bg-blue-50/30 px-4 py-3 border-b border-gray-100">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                              <IconRenderer
-                                iconName={expense.expense_types?.icon_name || "QuestionMarkCircleIcon"}
-                                size="md"
-                                className="text-gray-600 flex-shrink-0"
-                              />
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <span className="font-medium text-gray-900 truncate">
-                                  {expense.expense_types?.name || "Unknown"}
-                                </span>
-                                {expense.is_recurring && (
-                                  <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">
-                                    🔄 Recurring
-                                  </span>
-                                )}
-                                {expense.is_split && (
-                                  <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0">
-                                    👥 Split
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <div className="font-semibold text-gray-900">
-                                {formatCurrency(expense.amount || 0, preferences.currency)}
-                              </div>
-                              {expense.is_split && expense.original_amount && (
-                                <div className="text-xs text-gray-500">
-                                  of {formatCurrency(expense.original_amount, preferences.currency)}
-                                </div>
-                              )}
-                            </div>
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Left side: Icon + Name */}
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <IconRenderer
+                              iconName={expense.expense_types?.icon_name || "QuestionMarkCircleIcon"}
+                              size="sm"
+                              className="text-gray-600 flex-shrink-0"
+                            />
+                            <span className="font-medium text-gray-900 truncate">
+                              {expense.expense_types?.name || "Unknown"}
+                            </span>
                           </div>
-                        </div>
 
-                        {/* Bottom Row: Details */}
-                        <div className="px-4 py-3 bg-gray-50/50">
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <div className="flex items-center space-x-4">
-                              <span className="flex items-center space-x-1">
-                                <CalendarDaysIcon className="h-4 w-4" />
-                                <span>{expense.date}</span>
-                              </span>
-                              <span className="flex items-center space-x-1">
-                                <ClipboardDocumentListIcon className="h-4 w-4" />
-                                <span>{expense.expense_types?.categories?.name || "Unknown Category"}</span>
-                              </span>
+                          {/* Right side: Amount + Date */}
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-semibold text-gray-900 text-sm">
+                              {formatCurrency(expense.amount || 0, preferences.currency)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </div>
                           </div>
-                          {expense.description && (
-                            <div className="mt-2 text-sm text-gray-600">
-                              <span className="text-gray-500">Note:</span> {expense.description}
-                            </div>
-                          )}
-                          {expense.is_split && expense.split_with && (
-                            <div className="mt-2 text-sm text-gray-600">
-                              <span className="text-gray-500">Split with:</span> {expense.split_with}
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))}

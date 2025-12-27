@@ -25,15 +25,15 @@ export function getCurrencySymbol(currencyCode: string): string {
 }
 
 /**
- * Formats an amount with the appropriate currency symbol
+ * Formats an amount with the appropriate currency symbol and locale formatting (includes commas)
  * @param amount - The numeric amount to format
  * @param currencyCode - The currency code (USD, EUR, GBP, CAD, AUD)
  * @param decimals - Number of decimal places (default: 2)
- * @returns Formatted currency string
+ * @returns Formatted currency string with thousand separators
  */
 export function formatCurrency(amount: number, currencyCode: string, decimals: number = 2): string {
   const symbol = getCurrencySymbol(currencyCode)
-  return `${symbol}${amount.toFixed(decimals)}`
+  return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`
 }
 
 /**

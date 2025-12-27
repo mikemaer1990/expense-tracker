@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
-import { Bars3Icon, XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { ChartBarIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
 import { supabase } from '../../lib/supabase'
@@ -10,7 +9,7 @@ import DataGrid from './DataGrid'
 import PieChart from './PieChart'
 import LineChart from './LineChart'
 import BarChart from './BarChart'
-import UserDropdown from '../UI/UserDropdown'
+import Navigation from '../UI/Navigation'
 
 interface CategoryData {
   id: string
@@ -33,7 +32,7 @@ type TimePeriod = 'monthly' | 'yearly'
 type ViewMode = 'breakdown' | 'grid'
 
 export default function Analytics() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { preferences } = useUserPreferences()
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState<CategoryData[]>([])
@@ -44,7 +43,6 @@ export default function Analytics() {
   const [totalIncome, setTotalIncome] = useState(0)
   const [totalExpenses, setTotalExpenses] = useState(0)
   const [availableYears, setAvailableYears] = useState<number[]>([])
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const loadAnalyticsData = useCallback(async () => {
     if (!user) return
@@ -208,14 +206,6 @@ export default function Analytics() {
     }
   }, [availableYears, selectedYear])
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
   const surplus = totalIncome - totalExpenses
   const currentPeriodLabel = timePeriod === 'monthly' 
     ? new Date(selectedYear, selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })
@@ -246,124 +236,7 @@ export default function Analytics() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="Loggy"
-                className="h-10 w-auto mr-2 mb-2"
-              />
-              <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
-                <Link
-                  to="/"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/history"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  History
-                </Link>
-                <Link
-                  to="/analytics"
-                  className="text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  to="/expense-types"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Expense Types
-                </Link>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex lg:items-center">
-              <UserDropdown onSignOut={handleSignOut} />
-            </div>
-
-            <div className="lg:hidden flex items-center">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-700 hover:text-gray-900 p-2 cursor-pointer"
-              >
-                <div className="relative w-6 h-6">
-                  <Bars3Icon
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
-                    }`}
-                  />
-                  <XMarkIcon
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'
-                    }`}
-                  />
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div className={`lg:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}>
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                to="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/history"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                History
-              </Link>
-              <Link
-                to="/analytics"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Analytics
-              </Link>
-              <Link
-                to="/expense-types"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Expense Types
-              </Link>
-              <Link
-                to="/settings"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Settings
-              </Link>
-              <div className="border-t border-gray-200 pt-3">
-                <div className="px-3 py-2">
-                  <span className="text-sm text-gray-700">
-                    Welcome, {user?.email}
-                  </span>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">

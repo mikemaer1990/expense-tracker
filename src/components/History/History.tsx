@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
-import { DocumentTextIcon, TrashIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { getYearStartDate, getYearEndDate, getAvailableYears } from '../../utils/date'
 import EditExpense from '../Expenses/EditExpense'
 import EditIncome from '../Income/EditIncome'
 import IconRenderer from '../UI/IconRenderer'
-import UserDropdown from '../UI/UserDropdown'
+import Navigation from '../UI/Navigation'
 import Toast from '../UI/Toast'
 
 export default function History() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'expenses' | 'income'>('all')
@@ -20,7 +19,6 @@ export default function History() {
   const [editingTransaction, setEditingTransaction] = useState<any>(null)
   const [editType, setEditType] = useState<'expense' | 'income' | null>(null)
   const [expenseTypes, setExpenseTypes] = useState<any[]>([])
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [toast, setToast] = useState<{
     show: boolean
     message: string
@@ -292,138 +290,9 @@ export default function History() {
     })
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="Loggy"
-                className="h-10 w-auto mr-2 mb-2"
-              />
-              {/* Desktop Navigation */}
-              <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
-                <Link
-                  to="/"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/history"
-                  className="text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  History
-                </Link>
-                <Link
-                  to="/analytics"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  to="/expense-types"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Expense Types
-                </Link>
-              </div>
-            </div>
-
-            {/* Desktop User Menu */}
-            <div className="hidden lg:flex lg:items-center">
-              <UserDropdown onSignOut={handleSignOut} />
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="lg:hidden flex items-center">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-700 hover:text-gray-900 p-2 cursor-pointer"
-              >
-                <div className="relative w-6 h-6">
-                  <Bars3Icon 
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
-                    }`} 
-                  />
-                  <XMarkIcon 
-                    className={`absolute h-6 w-6 transition-all duration-300 ease-in-out ${
-                      mobileMenuOpen ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'
-                    }`} 
-                  />
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu */}
-          <div className={`lg:hidden border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}>
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                <Link
-                  to="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/history"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  History
-                </Link>
-                <Link
-                  to="/analytics"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  to="/expense-types"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Expense Types
-                </Link>
-                <Link
-                  to="/settings"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  Settings
-                </Link>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="px-3 py-2">
-                    <span className="text-sm text-gray-700">
-                      Welcome, {user?.email}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full text-left bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-base font-medium"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0 overflow-hidden">
