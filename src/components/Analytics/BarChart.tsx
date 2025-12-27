@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -175,7 +174,7 @@ export default function BarChart({
         }
       }
     },
-    onClick: (event, elements) => {
+    onClick: (_event, elements) => {
       if (elements.length > 0 && onBarClick) {
         const elementIndex = elements[0].index
         onBarClick(data[elementIndex])

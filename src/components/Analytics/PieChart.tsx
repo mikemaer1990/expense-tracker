@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -64,13 +63,18 @@ export default function PieChart({ categories, onCategoryClick }: PieChartProps)
             if (data.labels?.length && data.datasets.length) {
               return data.labels.map((label, i) => {
                 const dataset = data.datasets[0]
-                const value = dataset.data[i] as number
                 const category = categories[i]
-                
+                const bgColor = Array.isArray(dataset.backgroundColor)
+                  ? dataset.backgroundColor[i]
+                  : dataset.backgroundColor
+                const borderCol = Array.isArray(dataset.borderColor)
+                  ? dataset.borderColor[i]
+                  : dataset.borderColor
+
                 return {
                   text: `${label} (${category.percentage.toFixed(1)}%)`,
-                  fillStyle: dataset.backgroundColor?.[i] as string,
-                  strokeStyle: dataset.borderColor?.[i] as string,
+                  fillStyle: bgColor as string,
+                  strokeStyle: borderCol as string,
                   lineWidth: dataset.borderWidth as number,
                   hidden: false,
                   index: i
@@ -101,7 +105,7 @@ export default function PieChart({ categories, onCategoryClick }: PieChartProps)
         displayColors: true
       }
     },
-    onClick: (event, elements) => {
+    onClick: (_event, elements) => {
       if (elements.length > 0 && onCategoryClick) {
         const elementIndex = elements[0].index
         const categoryId = categories[elementIndex].id

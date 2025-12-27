@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,6 +32,7 @@ interface LineChartProps {
   data: TrendData[]
   title?: string
   timeframe: 'week' | 'month' | 'year'
+  currency?: string
 }
 
 export default function LineChart({ data, title = "Spending Trends", timeframe }: LineChartProps) {
