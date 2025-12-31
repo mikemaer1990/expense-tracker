@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   UserCircleIcon,
   CogIcon,
@@ -36,14 +36,7 @@ export default function Settings() {
     setToast({ show: true, message, type })
   }
 
-  // Load Splitwise connection on mount
-  useEffect(() => {
-    if (user?.id) {
-      loadSplitwiseConnection()
-    }
-  }, [user?.id])
-
-  const loadSplitwiseConnection = async () => {
+  const loadSplitwiseConnection = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -64,7 +57,14 @@ export default function Settings() {
     } catch (err) {
       console.error('Error loading Splitwise connection:', err)
     }
-  }
+  }, [user?.id])
+
+  // Load Splitwise connection on mount
+  useEffect(() => {
+    if (user?.id) {
+      loadSplitwiseConnection()
+    }
+  }, [user?.id, loadSplitwiseConnection])
 
   const handleConnectSplitwise = async () => {
     if (!user?.id || !splitwiseApiKey.trim()) {
