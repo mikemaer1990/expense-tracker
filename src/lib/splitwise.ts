@@ -13,8 +13,6 @@ import type {
   SplitwiseError,
 } from './splitwise-types';
 
-const SPLITWISE_API_BASE = 'https://secure.splitwise.com/api/v3.0';
-
 // Use Supabase Edge Function to proxy requests (avoids CORS)
 const SUPABASE_EDGE_FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL
   ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/smart-function`

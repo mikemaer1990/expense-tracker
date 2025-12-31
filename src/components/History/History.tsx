@@ -74,6 +74,9 @@ export default function History() {
             created_at,
             expense_type_id,
             is_recurring,
+            is_split,
+            original_amount,
+            split_with,
             expense_types (
               id,
               name,
@@ -466,6 +469,11 @@ export default function History() {
                                       🔄 Recurring
                                     </span>
                                   )}
+                                  {transaction.is_split && (
+                                    <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                                      👥 Split
+                                    </span>
+                                  )}
                                 </div>
                                 {transaction.description && (
                                   <div className="text-sm text-gray-500">{transaction.description}</div>
@@ -542,6 +550,11 @@ export default function History() {
                                 {transaction.is_recurring && (
                                   <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">
                                     🔄
+                                  </span>
+                                )}
+                                {transaction.is_split && (
+                                  <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0">
+                                    👥
                                   </span>
                                 )}
                               </div>

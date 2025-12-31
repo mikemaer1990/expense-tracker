@@ -340,16 +340,32 @@ export default function Dashboard() {
                         onClick={() => window.location.href = '/history'}
                       >
                         <div className="flex items-center justify-between gap-3">
-                          {/* Left side: Icon + Name */}
+                          {/* Left side: Icon + Name + Tags */}
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
                             <IconRenderer
                               iconName={expense.expense_types?.icon_name || "QuestionMarkCircleIcon"}
                               size="sm"
                               className="text-gray-600 flex-shrink-0"
                             />
-                            <span className="font-medium text-gray-900 truncate">
-                              {expense.expense_types?.name || "Unknown"}
-                            </span>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="font-medium text-gray-900 truncate">
+                                {expense.expense_types?.name || "Unknown"}
+                              </span>
+                              {(expense.is_recurring || expense.is_split) && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  {expense.is_recurring && (
+                                    <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+                                      🔄
+                                    </span>
+                                  )}
+                                  {expense.is_split && (
+                                    <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                                      👥
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Right side: Amount + Date */}
