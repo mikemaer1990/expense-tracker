@@ -3,13 +3,19 @@ import {
   UserCircleIcon,
   CogIcon,
   ArrowDownTrayIcon,
-  TrashIcon
+  TrashIcon,
+  ArrowPathIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
 import Navigation from '../UI/Navigation'
 import Toast from '../UI/Toast'
 import { Link } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { testSplitwiseConnection } from '../../lib/splitwise'
+import type { SplitwiseConnection } from '../../lib/splitwise-types'
+import { syncSplitwiseExpenses } from '../../lib/splitwise-sync'
 
 export default function Settings() {
   const { user } = useAuth()
@@ -20,8 +26,159 @@ export default function Settings() {
     type: 'success' | 'error' | 'info'
   }>({ show: false, message: '', type: 'info' })
 
+  // Splitwise integration state
+  const [splitwiseConnection, setSplitwiseConnection] = useState<SplitwiseConnection | null>(null)
+  const [splitwiseApiKey, setSplitwiseApiKey] = useState('')
+  const [splitwiseLoading, setSplitwiseLoading] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ show: true, message, type })
+  }
+
+  // Load Splitwise connection on mount
+  useEffect(() => {
+    if (user?.id) {
+      loadSplitwiseConnection()
+    }
+  }, [user?.id])
+
+  const loadSplitwiseConnection = async () => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await supabase
+        .from('splitwise_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw error
+      }
+
+      if (data) {
+        setSplitwiseConnection(data)
+        setSplitwiseApiKey('') // Don't show API key for security
+      }
+    } catch (err) {
+      console.error('Error loading Splitwise connection:', err)
+    }
+  }
+
+  const handleConnectSplitwise = async () => {
+    if (!user?.id || !splitwiseApiKey.trim()) {
+      showToast('Please enter your Splitwise API key', 'error')
+      return
+    }
+
+    setSplitwiseLoading(true)
+    try {
+      // Test the API key first
+      await testSplitwiseConnection(splitwiseApiKey)
+
+      // Save to database with sync_start_date set to today
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+      const { data, error } = await supabase
+        .from('splitwise_connections')
+        .upsert({
+          user_id: user.id,
+          api_key: splitwiseApiKey,
+          is_connected: true,
+          sync_start_date: today, // Only sync expenses from today forward
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setSplitwiseConnection(data)
+      setSplitwiseApiKey('') // Clear input for security
+      showToast('Successfully connected to Splitwise!', 'success')
+    } catch (err) {
+      console.error('Error connecting to Splitwise:', err)
+      showToast(
+        err instanceof Error ? err.message : 'Failed to connect to Splitwise',
+        'error'
+      )
+    } finally {
+      setSplitwiseLoading(false)
+    }
+  }
+
+  const handleDisconnectSplitwise = async () => {
+    if (!user?.id || !splitwiseConnection) return
+
+    if (!window.confirm('Are you sure you want to disconnect from Splitwise?')) {
+      return
+    }
+
+    setSplitwiseLoading(true)
+    try {
+      const { error } = await supabase
+        .from('splitwise_connections')
+        .delete()
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setSplitwiseConnection(null)
+      setSplitwiseApiKey('')
+      showToast('Disconnected from Splitwise', 'success')
+    } catch (err) {
+      console.error('Error disconnecting from Splitwise:', err)
+      showToast('Failed to disconnect from Splitwise', 'error')
+    } finally {
+      setSplitwiseLoading(false)
+    }
+  }
+
+  const handleSyncSplitwise = async () => {
+    if (!user?.id || !splitwiseConnection) return
+
+    setIsSyncing(true)
+    try {
+      // Use sync_start_date to only import expenses from connection date forward
+      const syncOptions = splitwiseConnection.sync_start_date
+        ? { dated_after: `${splitwiseConnection.sync_start_date}T00:00:00Z` }
+        : {}; // Fallback: sync all if no start date set
+
+      const result = await syncSplitwiseExpenses(
+        user.id,
+        splitwiseConnection.api_key,
+        syncOptions
+      )
+
+      if (result.success) {
+        const message = result.imported > 0
+          ? `Successfully imported ${result.imported} expense${result.imported === 1 ? '' : 's'}!${
+              result.skipped > 0 ? ` (${result.skipped} already synced)` : ''
+            }`
+          : result.skipped > 0
+          ? `All expenses already synced (${result.skipped} found)`
+          : 'No new expenses to sync'
+
+        showToast(message, result.imported > 0 ? 'success' : 'info')
+
+        // Reload connection to update last_sync_at
+        await loadSplitwiseConnection()
+      } else {
+        const errorMsg = result.errors.length > 0
+          ? result.errors[0]
+          : 'Unknown sync error'
+        showToast(`Sync failed: ${errorMsg}`, 'error')
+      }
+    } catch (err) {
+      console.error('Error syncing with Splitwise:', err)
+      showToast(
+        err instanceof Error ? err.message : 'Failed to sync with Splitwise',
+        'error'
+      )
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   const handleSettingChange = async (key: string, value: string) => {
@@ -209,6 +366,105 @@ export default function Settings() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Splitwise Integration */}
+            <div className="bg-white shadow rounded-lg border border-green-200">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <LinkIcon className="h-6 w-6 text-green-600" />
+                  <h3 className="text-lg font-medium text-gray-900">Splitwise Integration</h3>
+                </div>
+                <div className="space-y-4">
+                  {/* Connection Status */}
+                  {splitwiseConnection && (
+                    <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-800">
+                            Connected to Splitwise
+                          </p>
+                          {splitwiseConnection.last_sync_at && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Last synced: {new Date(splitwiseConnection.last_sync_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleDisconnectSplitwise}
+                          disabled={splitwiseLoading}
+                          className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* API Key Input (only show if not connected) */}
+                  {!splitwiseConnection && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Splitwise API Key
+                      </label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="password"
+                          value={splitwiseApiKey}
+                          onChange={(e) => setSplitwiseApiKey(e.target.value)}
+                          placeholder="Enter your API key"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                        <button
+                          onClick={handleConnectSplitwise}
+                          disabled={splitwiseLoading || !splitwiseApiKey.trim()}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {splitwiseLoading ? 'Connecting...' : 'Connect'}
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Get your API key from{' '}
+                        <a
+                          href="https://secure.splitwise.com/apps"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          Splitwise Settings
+                        </a>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Sync Button (only show if connected) */}
+                  {splitwiseConnection && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Sync Expenses</h4>
+                          <p className="text-sm text-gray-500">
+                            Import new expenses from Splitwise to Loggy
+                          </p>
+                          {splitwiseConnection.sync_start_date && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              Syncing expenses from {new Date(splitwiseConnection.sync_start_date).toLocaleDateString()} onward
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleSyncSplitwise}
+                          disabled={isSyncing}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 flex items-center space-x-2"
+                        >
+                          <ArrowPathIcon className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                          <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
