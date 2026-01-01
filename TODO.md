@@ -105,14 +105,20 @@
 - Recurring transaction management UI
 - Integration with budget tracking
 
-### 6. OAuth Splitwise Integration
+### 3. ✅ **Splitwise Integration** - COMPLETED
+**Status**: ✅ **COMPLETED** (January 1, 2026)
 **Priority**: MEDIUM
 **Description**: Connect with Splitwise API for expense sharing
-**Research Areas**:
-- Splitwise API capabilities and limitations
-- OAuth authentication flow implementation
-- Data sync possibilities (import/export)
-- User experience integration design
+**Implementation**:
+- ✅ Splitwise API connection via Settings page
+- ✅ API key storage and validation
+- ✅ Expense sync from Splitwise to Loggy
+- ✅ Duplicate prevention tracking
+- ✅ Database schema with splitwise_connections and splitwise_synced_expenses tables
+- ✅ Edge Function proxy for secure API calls
+- ✅ Optional feature - works seamlessly for users without Splitwise
+
+**Note**: Built-in expense splitting (is_split feature) works independently of Splitwise integration
 
 ## 📊 **Feature Expansion**
 
@@ -177,6 +183,15 @@
 
 ---
 
-**Last Updated**: December 26, 2025
+## 🐛 **Recent Bug Fixes**
+
+### ✅ Timezone Bug in Year Tab Extraction (January 1, 2026)
+**Issue**: Year tabs showing 2024/2025 instead of 2025/2026 due to timezone parsing
+**Fix**: Changed from `new Date(date).getFullYear()` to direct string parsing `date.split('-')[0]`
+**Impact**: Year tabs now correctly show all years with data across all pages (Dashboard, History, Analytics)
+
+---
+
+**Last Updated**: January 1, 2026
 **Project Status**: Production-ready, deployed on Vercel
 **Focus**: Feature expansion and UX improvements

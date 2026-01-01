@@ -139,6 +139,12 @@ loggy/
 - `npm run lint` - Lint code with ESLint
 - `npm run preview` - Preview production build locally
 
+## 📚 Documentation
+
+Additional documentation is available in the `/docs` folder:
+- **[Splitwise Integration](docs/SPLITWISE_INTEGRATION.md)** - Guide for setting up Splitwise API integration
+- **[Edge Function Deployment](docs/EDGE_FUNCTION_DEPLOYMENT.md)** - Instructions for deploying the Splitwise proxy Edge Function
+
 ## 📊 Key Features Deep Dive
 
 ### Expense Splitting
@@ -181,17 +187,18 @@ If you encounter any issues or have questions:
 ## 🚧 Roadmap
 
 ### Upcoming Features
-- [ ] Splitwise OAuth integration (in progress)
 - [ ] Budget tracking and alerts
 - [ ] Recurring expense automation
 - [ ] Export data to CSV/PDF
 - [ ] Dark mode support
 - [ ] Receipt photo uploads
+- [x] Splitwise API integration ✅ COMPLETED
 - [x] Multi-currency support ✅ COMPLETED
 - [x] Custom expense type management ✅ COMPLETED
 - [x] Advanced analytics suite ✅ COMPLETED
 
 ### Recently Fixed
+- ✅ **Timezone Bug in Year/Month Extraction**: Fixed year tabs and Analytics showing incorrect periods due to timezone parsing. Changed from Date object parsing to direct string parsing for consistent results across timezones.
 - ✅ **Internet/Phone Separation**: Successfully separated combined expense types
 - ✅ **Database Integrity**: Cleaned up all duplicate entries and corruption
 - ✅ **User Signup**: Fixed 500 errors with proper RLS policies

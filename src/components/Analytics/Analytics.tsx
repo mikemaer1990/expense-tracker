@@ -142,9 +142,9 @@ export default function Analytics() {
           let transactionCount = 0
 
           expenseType.expenses.forEach(expense => {
-            const expenseDate = new Date(expense.date)
-            const expenseYear = expenseDate.getFullYear()
-            const expenseMonth = expenseDate.getMonth()
+            // Extract year and month directly from YYYY-MM-DD string to avoid timezone issues
+            const expenseYear = parseInt(expense.date.split('-')[0], 10)
+            const expenseMonth = parseInt(expense.date.split('-')[1], 10) - 1 // Month is 0-indexed
 
             if (timePeriod === 'monthly') {
               if (expenseYear === selectedYear && expenseMonth === selectedMonth) {
@@ -155,7 +155,7 @@ export default function Analytics() {
               if (expenseYear === selectedYear) {
                 totalAmount += expense.amount
                 transactionCount++
-                const monthKey = expenseDate.toLocaleString('default', { month: 'short' })
+                const monthKey = new Date(expenseYear, expenseMonth).toLocaleString('default', { month: 'short' })
                 monthlyData[monthKey] = (monthlyData[monthKey] || 0) + expense.amount
               }
             }
@@ -316,9 +316,9 @@ export default function Analytics() {
                               ? 'bg-white text-gray-900 shadow-sm' 
                               : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
                           }`}
-                          title={new Date(2024, i).toLocaleString('default', { month: 'long' })}
+                          title={new Date(selectedYear, i).toLocaleString('default', { month: 'long' })}
                         >
-                          {new Date(2024, i).toLocaleString('default', { month: 'short' })}
+                          {new Date(selectedYear, i).toLocaleString('default', { month: 'short' })}
                         </button>
                       ))}
                     </div>
@@ -446,8 +446,8 @@ export default function Analytics() {
                     percentage: cat.percentage
                   }))}
                   onCategoryClick={(categoryId) => {
-                    console.log('Category clicked:', categoryId)
                     // Future: Show detailed breakdown for selected category
+                    void categoryId // Suppress unused warning
                   }}
                 />
                 
@@ -456,7 +456,7 @@ export default function Analytics() {
                   <BarChart
                     currency={preferences.currency}
                     data={Array.from({ length: 12 }, (_, i) => {
-                      const monthKey = new Date(2024, i).toLocaleString('default', { month: 'short' })
+                      const monthKey = new Date(selectedYear, i).toLocaleString('default', { month: 'short' })
                       const monthTotal = categories.reduce((sum, cat) => 
                         sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] || 0), 0), 0
                       )
@@ -470,8 +470,8 @@ export default function Analytics() {
                       }
                     })}
                     onBarClick={(monthData) => {
-                      console.log('Month clicked:', monthData)
                       // Future: Show detailed breakdown for selected month
+                      void monthData // Suppress unused warning
                     }}
                   />
                 )}
@@ -513,7 +513,9 @@ export default function Analytics() {
                 data={gridData}
                 selectedYear={selectedYear}
                 currency={preferences.currency}
-                onExportCSV={() => console.log('CSV exported')}
+                onExportCSV={() => {
+                  // CSV export functionality placeholder
+                }}
               />
             ) : (
               <div className="bg-white shadow rounded-lg p-8">
