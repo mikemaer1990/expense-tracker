@@ -99,8 +99,11 @@ export default function Analytics() {
       categoriesData?.forEach(category => {
         category.expense_types.forEach(expenseType => {
           expenseType.expenses.forEach(expense => {
-            const expenseYear = new Date(expense.date).getFullYear()
-            yearsSet.add(expenseYear)
+            // Extract year directly from YYYY-MM-DD string to avoid timezone issues
+            const expenseYear = parseInt(expense.date.split('-')[0], 10)
+            if (!isNaN(expenseYear)) {
+              yearsSet.add(expenseYear)
+            }
           })
         })
       })
@@ -113,8 +116,11 @@ export default function Analytics() {
       
       if (!allIncomeError && allIncomeData) {
         allIncomeData.forEach(income => {
-          const incomeYear = new Date(income.date).getFullYear()
-          yearsSet.add(incomeYear)
+          // Extract year directly from YYYY-MM-DD string to avoid timezone issues
+          const incomeYear = parseInt(income.date.split('-')[0], 10)
+          if (!isNaN(incomeYear)) {
+            yearsSet.add(incomeYear)
+          }
         })
       }
       

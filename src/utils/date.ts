@@ -32,8 +32,11 @@ export function getAvailableYears(dates: string[]): number[] {
 
   dates.forEach(date => {
     if (date) {
-      const year = new Date(date).getFullYear()
-      yearsSet.add(year)
+      // Extract year directly from YYYY-MM-DD string to avoid timezone issues
+      const year = parseInt(date.split('-')[0], 10)
+      if (!isNaN(year)) {
+        yearsSet.add(year)
+      }
     }
   })
 
