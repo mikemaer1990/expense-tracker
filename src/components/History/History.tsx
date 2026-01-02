@@ -3,6 +3,8 @@ import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { getYearStartDate, getYearEndDate, getAvailableYears } from '../../utils/date'
+import { formatCurrency } from '../../utils/currency'
+import { useUserPreferences } from '../../hooks/useUserPreferences'
 import EditExpense from '../Expenses/EditExpense'
 import EditIncome from '../Income/EditIncome'
 import IconRenderer from '../UI/IconRenderer'
@@ -11,6 +13,7 @@ import Toast from '../UI/Toast'
 
 export default function History() {
   const { user } = useAuth()
+  const { preferences } = useUserPreferences()
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'expenses' | 'income'>('all')
@@ -493,7 +496,7 @@ export default function History() {
                             <span className={`font-semibold ${
                               transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
                             }`}>
-                              {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                              {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, preferences.currency)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -562,7 +565,7 @@ export default function History() {
                             <p className={`text-lg font-semibold flex-shrink-0 ${
                               transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
                             }`}>
-                              {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                              {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, preferences.currency)}
                             </p>
                           </div>
                         </div>

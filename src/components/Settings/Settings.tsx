@@ -395,7 +395,7 @@ export default function Settings() {
                         <button
                           onClick={handleDisconnectSplitwise}
                           disabled={splitwiseLoading}
-                          className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                          className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         >
                           Disconnect
                         </button>
@@ -406,25 +406,27 @@ export default function Settings() {
                   {/* API Key Input (only show if not connected) */}
                   {!splitwiseConnection && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="splitwise-api-key" className="block text-sm font-medium text-gray-700 mb-1">
                         Splitwise API Key
                       </label>
-                      <div className="flex space-x-2">
+                      <form onSubmit={(e) => { e.preventDefault(); handleConnectSplitwise(); }} className="flex space-x-2">
                         <input
+                          id="splitwise-api-key"
                           type="password"
                           value={splitwiseApiKey}
                           onChange={(e) => setSplitwiseApiKey(e.target.value)}
                           placeholder="Enter your API key"
+                          autoComplete="off"
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
                         <button
-                          onClick={handleConnectSplitwise}
+                          type="submit"
                           disabled={splitwiseLoading || !splitwiseApiKey.trim()}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         >
                           {splitwiseLoading ? 'Connecting...' : 'Connect'}
                         </button>
-                      </div>
+                      </form>
                       <p className="mt-1 text-xs text-gray-500">
                         Get your API key from{' '}
                         <a
@@ -457,7 +459,7 @@ export default function Settings() {
                         <button
                           onClick={handleSyncSplitwise}
                           disabled={isSyncing}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 flex items-center space-x-2"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed flex items-center space-x-2"
                         >
                           <ArrowPathIcon className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
                           <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
