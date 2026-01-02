@@ -522,7 +522,7 @@ export default function History() {
                 <div className="block lg:hidden">
                   <div className="space-y-4 p-4 overflow-hidden">
                     {transactions.map((transaction) => (
-                      <div key={`${transaction.type}-${transaction.id}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 min-w-0">
+                      <div key={`${transaction.type}-${transaction.id}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md active:shadow-sm active:scale-[0.98] transition-all duration-200 min-w-0">
                         {/* Top Row: Icon + Name + Amount */}
                         <div className="bg-blue-50/30 px-4 py-3 border-b border-gray-100">
                           <div className="flex items-center justify-between gap-3">
@@ -593,25 +593,25 @@ export default function History() {
                         <div className="bg-gray-50 border-t border-gray-100">
                           <div className="flex">
                             {/* Edit Button Section */}
-                            <div className="flex-1 flex items-center justify-center py-3 border-r border-gray-200">
+                            <div className="flex-1 flex items-center justify-center py-2 border-r border-gray-200">
                               <button
                                 onClick={() => handleEdit(transaction)}
-                                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-100 cursor-pointer transition-colors duration-200"
+                                className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-700 active:text-blue-800 px-4 py-3 rounded-md hover:bg-blue-100 active:bg-blue-200 cursor-pointer transition-all duration-150 min-h-[44px] min-w-[44px]"
                                 title="Edit transaction"
                               >
-                                <DocumentTextIcon className="h-5 w-5" />
+                                <DocumentTextIcon className="h-6 w-6" />
                                 <span className="text-sm font-medium">Edit</span>
                               </button>
                             </div>
 
                             {/* Delete Button Section */}
-                            <div className="flex-1 flex items-center justify-center py-3">
+                            <div className="flex-1 flex items-center justify-center py-2">
                               <button
                                 onClick={() => handleDelete(transaction.id, transaction.type)}
-                                className="flex items-center space-x-2 text-red-600 hover:text-red-700 p-2 rounded-md hover:bg-red-100 cursor-pointer transition-colors duration-200"
+                                className="flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 active:text-red-800 px-4 py-3 rounded-md hover:bg-red-100 active:bg-red-200 cursor-pointer transition-all duration-150 min-h-[44px] min-w-[44px]"
                                 title="Delete transaction"
                               >
-                                <TrashIcon className="h-5 w-5" />
+                                <TrashIcon className="h-6 w-6" />
                                 <span className="text-sm font-medium">Delete</span>
                               </button>
                             </div>
