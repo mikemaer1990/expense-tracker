@@ -2,7 +2,50 @@
 
 ## 🎯 **Current Priority Features**
 
-### 1. ✅ **Historical Data Import** - COMPLETED
+### 1. 🔥 **Eliminate Scrolling in Add Expense Form** - TOP PRIORITY
+**Status**: ⏳ **PENDING** (Deferred for review)
+**Priority**: 🔴 **HIGHEST**
+**Description**: Redesign Add Expense form to eliminate all scrolling through creative UX solutions
+
+**Problem**:
+- Expense type icon grid takes 180-360px of vertical space
+- Desktop scrolling when: large type grids + recurring + split options exceed 80vh
+- Current implementation requires scrolling for complex expense entry
+
+**Proposed Solutions** (5 options to choose from):
+
+1. **⭐ Smart Favorites + "More" Button** (RECOMMENDED)
+   - Show 6-8 most recent/frequent expense types as quick buttons
+   - "See all..." button for full grid in modal
+   - 90% of expenses = no scroll, 2 taps
+
+2. **Horizontal Swipe Carousel**
+   - Expense types scroll horizontally (like Netflix)
+   - No vertical scroll needed
+
+3. **Multi-Step Wizard**
+   - Step 1: Category + favorites + Amount + Date
+   - Step 2: Optional fields (description, split, recurring)
+
+4. **Progressive Disclosure**
+   - Start minimal, "+ More options" expands
+   - Hide optional fields until needed
+
+5. **Split Layout (Desktop)**
+   - Two columns: Type selection | Form fields
+   - Both fit in viewport
+
+**Detailed Plan**: See `C:\Users\mike_\.claude\plans\gentle-scribbling-eclipse.md`
+
+**Next Steps**:
+- Review all 5 options
+- Pick preferred approach
+- Get user feedback on implementation details
+- Build & test selected solution
+
+---
+
+### 2. ✅ **Historical Data Import** - COMPLETED
 **Status**: ✅ **COMPLETED** (December 27, 2025)
 **Approach**: One-time import script (not a permanent UI feature)
 **Description**: Imported historical 2025 budget spreadsheet data into Loggy
