@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../lib/supabase'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
 import IconRenderer from '../UI/IconRenderer'
+import Modal from '../UI/Modal'
+import FloatingLabelInput from '../UI/FloatingLabelInput'
+import FloatingLabelTextarea from '../UI/FloatingLabelTextarea'
+import FloatingLabelSelect from '../UI/FloatingLabelSelect'
+import SelectionCard from '../UI/SelectionCard'
+import CheckboxField from '../UI/CheckboxField'
+import FormButtons from '../UI/FormButtons'
 
 interface ExpenseForm {
   expense_type_id: string
@@ -40,21 +47,20 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   const { preferences } = useUserPreferences()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isVisible, setIsVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
   // Parse recurring information from description
   const isCurrentlyRecurring = expense.is_recurring || false
   const parseRecurringFromDescription = (description: string) => {
     if (!description || !description.includes('Recurring:')) return { frequency: '', cleanDescription: description }
-    
+
     const parts = description.split('Recurring: ')[1] || ''
     if (parts.includes('every 2 weeks')) return { frequency: 'biweekly', cleanDescription: parts.split(' - ')[1] || '' }
     if (parts.includes('every week')) return { frequency: 'weekly', cleanDescription: parts.split(' - ')[1] || '' }
     if (parts.includes('every month')) return { frequency: 'monthly', cleanDescription: parts.split(' - ')[1] || '' }
     if (parts.includes('every quarter')) return { frequency: 'quarterly', cleanDescription: parts.split(' - ')[1] || '' }
     if (parts.includes('every year')) return { frequency: 'yearly', cleanDescription: parts.split(' - ')[1] || '' }
-    
+
     return { frequency: '', cleanDescription: parts.split(' - ')[1] || parts }
   }
 
@@ -85,29 +91,11 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   const isSplit = watch('is_split')
   const amount = watch('amount')
 
-  const handleClose = () => {
-    setIsVisible(false)
-    // Wait for animation to complete before actually closing
-    setTimeout(() => {
-      onClose()
-    }, 200) // Match the animation duration
-  }
-
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [])
-
   useEffect(() => {
     // Set form value immediately since expense types are pre-loaded
     if (expense.expense_type_id) {
       setValue('expense_type_id', expense.expense_type_id)
     }
-    // Trigger animation on mount
-    setTimeout(() => setIsVisible(true), 10)
   }, [expense.expense_type_id, setValue])
 
   const onSubmit = async (data: ExpenseForm) => {
@@ -132,7 +120,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
         // Create recurring expense entry with frequency in description
         const frequencyText = data.recurring_frequency === 'biweekly' ? 'every 2 weeks' : `every ${data.recurring_frequency?.replace('ly', '')}`
         const recurringDescription = `Recurring: ${frequencyText}${data.description ? ` - ${data.description}` : ''}`
-        
+
         updateData.date = data.recurring_start_date!
         updateData.description = recurringDescription
       } else {
@@ -149,7 +137,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       if (error) throw error
 
       onSuccess()
-      handleClose()
+      onClose()
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -167,42 +155,12 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   }, {} as Record<string, ExpenseType[]>)
 
   return (
-    <div
-      className={`fixed inset-0 bg-gray-600 overflow-y-auto h-full w-full z-50 transition-opacity duration-200 ${isVisible ? 'bg-opacity-50 opacity-100' : 'bg-opacity-0 opacity-0'}`}
-      onClick={handleClose}
+    <Modal
+      title="Edit Expense"
+      onClose={onClose}
+      accentColor="blue"
     >
-      <div
-        className={`relative mx-auto border shadow-lg bg-white
-                    /* Mobile: Full screen with slide-up animation */
-                    min-h-screen w-full p-0 rounded-none
-                    /* Desktop: Centered modal with fade animation */
-                    md:top-20 md:w-96 md:max-h-[80vh] md:min-h-0 md:rounded-md md:overflow-y-auto
-                    /* Animation classes */
-                    transform transition-all duration-200 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 -translate-y-4'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button - top right */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/80 rounded-full transition-colors duration-200 z-20"
-          aria-label="Close"
-        >
-          <XMarkIcon className="h-6 w-6" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="relative">
-          {/* Gradient accent bar */}
-          <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-6 py-6 border-b border-gray-100">
-            <h3 className="text-xl font-bold text-gray-900 text-center">
-              Edit Expense
-            </h3>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
             {/* Expense Type */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-3">Expense Type</label>
@@ -236,38 +194,22 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                         {filteredTypes.map((type) => {
                           const isSelected = watch('expense_type_id') === type.id
                           return (
-                            <button
+                            <SelectionCard
                               key={type.id}
-                              type="button"
+                              isSelected={isSelected}
                               onClick={() => {
                                 register('expense_type_id').onChange({ target: { value: type.id, name: 'expense_type_id' } })
                               }}
-                              className={`
-                                relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 min-h-[90px] cursor-pointer
-                                hover:scale-[1.02] active:scale-[0.98]
-                                ${isSelected
-                                  ? 'border-transparent bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md shadow-emerald-200/30'
-                                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                                }
-                              `}
-                            >
-                              {/* Gradient border effect for selected state */}
-                              {isSelected && (
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 -z-10 p-[2px]">
-                                  <div className="h-full w-full bg-white rounded-xl"></div>
-                                </div>
-                              )}
-
-                              <IconRenderer
-                                iconName={type.icon_name}
-                                size="lg"
-                                color={isSelected ? 'text-emerald-600' : 'text-gray-600'}
-                                className="mb-2 transition-colors"
-                              />
-                              <span className={`text-xs text-center font-medium leading-tight ${isSelected ? 'text-emerald-900' : 'text-gray-700'}`}>
-                                {type.name}
-                              </span>
-                            </button>
+                              icon={
+                                <IconRenderer
+                                  iconName={type.icon_name}
+                                  size="lg"
+                                  className="transition-colors"
+                                />
+                              }
+                              label={type.name}
+                              accentColor="emerald"
+                            />
                           )
                         })}
                       </div>
@@ -282,56 +224,39 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
             </div>
 
             {/* Amount - Floating Label */}
-            <div className="relative">
-              <input
-                {...register('amount', {
-                  required: 'Amount is required',
-                  min: { value: 0.01, message: 'Amount must be greater than 0' }
-                })}
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                placeholder=" "
-                className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-transparent min-h-[52px]"
-              />
-              <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:font-medium peer-focus:text-blue-600 peer-focus:bg-white">
-                Amount
-              </label>
-              {errors.amount && (
-                <p className="mt-1.5 text-sm text-red-600">{errors.amount.message}</p>
-              )}
-            </div>
+            <FloatingLabelInput
+              {...register('amount', {
+                required: 'Amount is required',
+                min: { value: 0.01, message: 'Amount must be greater than 0' }
+              })}
+              label="Amount"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              accentColor="blue"
+              error={errors.amount}
+            />
 
             {/* Expense Splitting (conditional) */}
             {preferences.enableExpenseSplitting && (
               <div>
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    {...register('is_split')}
-                    type="checkbox"
-                    className="h-5 w-5 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 border-2 border-gray-300 rounded-md transition-all cursor-pointer"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Split this expense</span>
-                </label>
+                <CheckboxField
+                  {...register('is_split')}
+                  label="Split this expense"
+                  accentColor="blue"
+                />
 
                 {isSplit && (
                   <div className="mt-3 space-y-3">
-                    <div className="relative">
-                      <input
-                        {...register('split_with', {
-                          required: isSplit ? 'Please specify who you\'re splitting with' : false
-                        })}
-                        type="text"
-                        placeholder=" "
-                        className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-transparent min-h-[52px]"
-                      />
-                      <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:font-medium peer-focus:text-blue-600 peer-focus:bg-white">
-                        Split with
-                      </label>
-                      {errors.split_with && (
-                        <p className="mt-1.5 text-sm text-red-600">{errors.split_with.message}</p>
-                      )}
-                    </div>
+                    <FloatingLabelInput
+                      {...register('split_with', {
+                        required: isSplit ? 'Please specify who you\'re splitting with' : false
+                      })}
+                      label="Split with"
+                      type="text"
+                      accentColor="blue"
+                      error={errors.split_with}
+                    />
 
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-100">
                       <h4 className="text-sm font-semibold text-blue-900 mb-1.5">Split Preview</h4>
@@ -350,103 +275,65 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
             )}
 
             {/* Recurring Toggle */}
-            <div>
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  {...register('is_recurring')}
-                  type="checkbox"
-                  className="h-5 w-5 text-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:ring-offset-0 border-2 border-gray-300 rounded-md transition-all cursor-pointer"
-                />
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">This is a recurring expense</span>
-              </label>
-            </div>
+            <CheckboxField
+              {...register('is_recurring')}
+              label="This is a recurring expense"
+              accentColor="purple"
+            />
 
             {/* One-time Expense Fields */}
             {!isRecurring && (
-              <div className="relative">
-                <input
-                  {...register('date', { required: !isRecurring ? 'Date is required' : false })}
-                  type="date"
-                  className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[52px]"
-                />
-                <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 peer-focus:text-blue-600 transition-colors">
-                  Date
-                </label>
-                {errors.date && (
-                  <p className="mt-1.5 text-sm text-red-600">{errors.date.message}</p>
-                )}
-              </div>
+              <FloatingLabelInput
+                {...register('date', { required: !isRecurring ? 'Date is required' : false })}
+                label="Date"
+                type="date"
+                accentColor="blue"
+                error={errors.date}
+              />
             )}
 
             {/* Recurring Expense Fields */}
             {isRecurring && (
               <>
-                <div className="relative">
-                  <select
-                    {...register('recurring_frequency', { required: isRecurring ? 'Frequency is required' : false })}
-                    className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[52px] appearance-none bg-white"
-                  >
-                    <option value="">Select frequency</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="biweekly">Bi-weekly (Every 2 weeks)</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly (Every 3 months)</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                  <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 peer-focus:text-blue-600 transition-colors">
-                    Frequency
-                  </label>
-                  {/* Dropdown arrow */}
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  {errors.recurring_frequency && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.recurring_frequency.message}</p>
-                  )}
-                </div>
+                <FloatingLabelSelect
+                  {...register('recurring_frequency', { required: isRecurring ? 'Frequency is required' : false })}
+                  label="Frequency"
+                  accentColor="blue"
+                  error={errors.recurring_frequency}
+                >
+                  <option value="">Select frequency</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly (Every 2 weeks)</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly (Every 3 months)</option>
+                  <option value="yearly">Yearly</option>
+                </FloatingLabelSelect>
 
-                <div className="relative">
-                  <input
-                    {...register('recurring_start_date', { required: isRecurring ? 'Start date is required' : false })}
-                    type="date"
-                    className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[52px]"
-                  />
-                  <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 peer-focus:text-blue-600 transition-colors">
-                    Start Date
-                  </label>
-                  {errors.recurring_start_date && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.recurring_start_date.message}</p>
-                  )}
-                </div>
+                <FloatingLabelInput
+                  {...register('recurring_start_date', { required: isRecurring ? 'Start date is required' : false })}
+                  label="Start Date"
+                  type="date"
+                  accentColor="blue"
+                  error={errors.recurring_start_date}
+                />
 
-                <div className="relative">
-                  <input
-                    {...register('recurring_end_date')}
-                    type="date"
-                    className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[52px]"
-                  />
-                  <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 peer-focus:text-blue-600 transition-colors">
-                    End Date (optional)
-                  </label>
-                  <p className="mt-1.5 text-xs text-gray-500">Leave empty for ongoing expense</p>
-                </div>
+                <FloatingLabelInput
+                  {...register('recurring_end_date')}
+                  label="End Date (optional)"
+                  type="date"
+                  accentColor="blue"
+                />
+                <p className="mt-1.5 text-xs text-gray-500">Leave empty for ongoing expense</p>
               </>
             )}
 
             {/* Description - Floating Label */}
-            <div className="relative">
-              <textarea
-                {...register('description')}
-                rows={2}
-                placeholder=" "
-                className="peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-transparent resize-none"
-              />
-              <label className="absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:font-medium peer-focus:text-blue-600 peer-focus:bg-white">
-                Description (optional)
-              </label>
-            </div>
+            <FloatingLabelTextarea
+              {...register('description')}
+              label="Description (optional)"
+              rows={2}
+              accentColor="blue"
+            />
 
             {error && (
               <div className="text-red-600 text-sm">{error}</div>
@@ -463,24 +350,14 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               </div>
             )}
 
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex-1 px-6 py-3.5 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] min-h-[52px] font-semibold cursor-pointer transition-all duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none min-h-[52px] font-semibold cursor-pointer transition-all duration-200"
-              >
-                {loading ? 'Updating...' : isRecurring ? 'Update Recurring Expense' : 'Update Expense'}
-              </button>
-            </div>
+            <FormButtons
+              onCancel={onClose}
+              submitLabel={isRecurring ? 'Update Recurring Expense' : 'Update Expense'}
+              isLoading={loading}
+              loadingLabel="Updating..."
+              accentColor="blue"
+            />
           </form>
-      </div>
-    </div>
+    </Modal>
   )
 }
