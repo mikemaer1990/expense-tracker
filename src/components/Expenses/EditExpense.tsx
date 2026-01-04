@@ -159,8 +159,13 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       title="Edit Expense"
       onClose={onClose}
       accentColor="blue"
+      desktopWidth="comfortable"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+        {/* Two-column layout on desktop, single column on mobile */}
+        <div className="flex flex-col md:grid md:grid-cols-[1.2fr_1fr] md:gap-6">
+          {/* LEFT COLUMN - Type Selection */}
+          <div className="space-y-4 md:pr-4 md:border-r md:border-gray-200">
             {/* Expense Type */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-3">Expense Type</label>
@@ -222,7 +227,10 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                 <p className="mt-2 text-sm text-red-600">{errors.expense_type_id.message}</p>
               )}
             </div>
+          </div>
 
+          {/* RIGHT COLUMN - Form Fields */}
+          <div className="space-y-4 mt-4 md:mt-0">
             {/* Amount - Floating Label */}
             <FloatingLabelInput
               {...register('amount', {
@@ -235,6 +243,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               step="0.01"
               accentColor="blue"
               error={errors.amount}
+              autoComplete="off"
             />
 
             {/* Expense Splitting (conditional) */}
@@ -357,7 +366,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               loadingLabel="Updating..."
               accentColor="blue"
             />
-          </form>
+          </div>
+        </div>
+      </form>
     </Modal>
   )
 }

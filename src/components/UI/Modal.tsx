@@ -11,6 +11,7 @@ interface ModalProps {
   loadingText?: string
   showEmptyState?: boolean
   emptyStateMessage?: string
+  desktopWidth?: 'default' | 'comfortable' | 'wide' // default=384px, comfortable=800px, wide=1000px
 }
 
 const accentColorClasses = {
@@ -32,6 +33,12 @@ const accentColorClasses = {
   }
 }
 
+const desktopWidthClasses = {
+  default: 'md:w-96',
+  comfortable: 'md:w-[800px]',
+  wide: 'md:w-[1000px]'
+}
+
 export default function Modal({
   title,
   onClose,
@@ -40,7 +47,8 @@ export default function Modal({
   isLoading = false,
   loadingText = 'Loading...',
   showEmptyState = false,
-  emptyStateMessage = 'No data available'
+  emptyStateMessage = 'No data available',
+  desktopWidth = 'default'
 }: ModalProps) {
   // Prevent background scroll when modal is open
   useEffect(() => {
@@ -56,9 +64,9 @@ export default function Modal({
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div className="relative mx-auto border shadow-lg bg-white
+        <div className={`relative mx-auto border shadow-lg bg-white
                         min-h-screen w-full p-4 pt-8 pb-8 rounded-none
-                        md:top-20 md:w-96 md:min-h-0 md:p-5 md:rounded-md">
+                        md:top-20 ${desktopWidthClasses[desktopWidth]} md:min-h-0 md:p-5 md:rounded-md`}>
           <div className="mt-3 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-2 text-sm text-gray-500">{loadingText}</p>
@@ -72,9 +80,9 @@ export default function Modal({
   if (showEmptyState) {
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div className="relative mx-auto border shadow-lg bg-white
+        <div className={`relative mx-auto border shadow-lg bg-white
                         min-h-screen w-full p-4 pt-8 pb-8 rounded-none
-                        md:top-20 md:w-96 md:min-h-0 md:p-5 md:rounded-md">
+                        md:top-20 ${desktopWidthClasses[desktopWidth]} md:min-h-0 md:p-5 md:rounded-md`}>
           <div className="mt-3 text-center">
             <h3 className="text-lg font-medium text-gray-900">{title}</h3>
             <p className="mt-2 text-sm text-gray-500">{emptyStateMessage}</p>
@@ -94,13 +102,11 @@ export default function Modal({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative mx-auto border shadow-lg bg-white
-                      /* Mobile: Full screen with slide-up animation */
+      <div className={`relative mx-auto border shadow-lg bg-white
+                      /* Mobile: Full screen */
                       min-h-screen w-full p-0 rounded-none
-                      /* Desktop: Centered modal with fade animation */
-                      md:top-20 md:w-96 md:max-h-[80vh] md:min-h-0 md:rounded-md md:overflow-y-auto
-                      /* Animation classes */
-                      transform transition-all duration-300 ease-out">
+                      /* Desktop: Centered modal */
+                      md:top-20 ${desktopWidthClasses[desktopWidth]} md:max-h-[80vh] md:min-h-0 md:rounded-md md:overflow-y-auto`}>
         {/* Close button - top right */}
         <button
           onClick={onClose}

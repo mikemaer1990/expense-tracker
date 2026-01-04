@@ -62,14 +62,13 @@ export default function SelectionCard({
       type="button"
       onClick={onClick}
       className={`
-        relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer
+        relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer min-h-[110px]
         hover:scale-[1.02] active:scale-[0.98]
         ${isSelected
           ? `border-transparent ${colors.selectedBg} ${colors.selectedShadow}`
           : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
         }
       `}
-      style={{ minHeight }}
     >
       {/* Gradient border effect for selected state */}
       {isSelected && (
@@ -78,11 +77,11 @@ export default function SelectionCard({
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-2">
-        <div className={isSelected ? colors.selectedIconColor : 'text-gray-600'}>
+      <div className="flex flex-col items-center gap-2 w-full">
+        <div className={`${isSelected ? colors.selectedIconColor : 'text-gray-600'} flex-shrink-0`}>
           {icon}
         </div>
-        <span className={`text-xs text-center font-medium leading-tight ${isSelected ? colors.selectedTextColor : 'text-gray-700'}`}>
+        <span className={`text-xs md:text-[0.7rem] text-center font-medium leading-tight w-full px-1 break-words ${isSelected ? colors.selectedTextColor : 'text-gray-700'}`}>
           {label}
         </span>
       </div>

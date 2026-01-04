@@ -46,7 +46,7 @@ const FloatingLabelSelect = forwardRef<HTMLSelectElement, FloatingLabelSelectPro
         >
           {children}
         </select>
-        <label className={`absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 ${colors.label} transition-colors`}>
+        <label className={`absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 ${colors.label} transition-colors pointer-events-none`}>
           {label}
         </label>
         {/* Dropdown arrow */}

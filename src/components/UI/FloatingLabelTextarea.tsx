@@ -43,7 +43,7 @@ const FloatingLabelTextarea = forwardRef<HTMLTextAreaElement, FloatingLabelTexta
           className={`peer block w-full px-4 py-3.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 ${colors.ring} ${colors.border} transition-all placeholder-transparent resize-none ${className}`}
           {...props}
         />
-        <label className={`absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:font-medium ${colors.label} peer-focus:bg-white`}>
+        <label className={`absolute left-4 -top-2.5 bg-white px-2 text-sm font-medium text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-sm peer-focus:font-medium ${colors.label} peer-focus:bg-white pointer-events-none`}>
           {label}
         </label>
         {error && (

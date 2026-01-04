@@ -254,6 +254,16 @@
 - Accessibility improvements
 - SEO optimization
 
+### 15. Database Cleanup - Default Expense Type Naming
+**Priority**: LOW
+**Description**: Update default expense types to use consistent spacing around "/" separator
+**Details**:
+- Update database trigger `create_default_expense_types()` to rename "Rent/Mortgage" → "Rent / Mortgage"
+- Apply migration to existing users for consistency
+- **Update Splitwise mapping** in `src/lib/splitwise.ts` (lines 202-203) to use "Rent / Mortgage"
+- Ensures visual consistency with manually renamed types (e.g., "Toiletries / Household")
+**Note**: Requires 3 changes total (trigger + migration + Splitwise mapping) to avoid breaking Splitwise sync
+
 ## 📋 **Implementation Notes**
 
 ---

@@ -112,6 +112,7 @@ export default function AddIncome({ onClose, onSuccess }: { onClose: () => void;
               step="0.01"
               accentColor="green"
               error={errors.amount}
+              autoComplete="off"
             />
 
             {/* Recurring Toggle */}

@@ -35,6 +35,7 @@ import {
   WrenchScrewdriverIcon,
   Cog6ToothIcon,
   ClockIcon,
+  CalendarIcon,
   
   // Health & Wellness
   HeartIcon,
@@ -216,35 +217,41 @@ export const iconCategories = {
   ],
 
   'Utilities & Services': [
-    { 
-      name: 'BoltIcon', 
-      component: BoltIcon, 
+    {
+      name: 'BoltIcon',
+      component: BoltIcon,
       keywords: ['electricity', 'power', 'utilities', 'energy'],
       description: 'Electricity, power utilities'
     },
-    { 
-      name: 'FireIcon', 
-      component: FireIcon, 
+    {
+      name: 'FireIcon',
+      component: FireIcon,
       keywords: ['gas', 'heating', 'fire', 'utilities'],
       description: 'Gas, heating utilities'
     },
-    { 
-      name: 'WrenchScrewdriverIcon', 
-      component: WrenchScrewdriverIcon, 
+    {
+      name: 'WrenchScrewdriverIcon',
+      component: WrenchScrewdriverIcon,
       keywords: ['maintenance', 'repair', 'tools', 'fix'],
       description: 'Maintenance, repairs'
     },
-    { 
-      name: 'Cog6ToothIcon', 
-      component: Cog6ToothIcon, 
+    {
+      name: 'Cog6ToothIcon',
+      component: Cog6ToothIcon,
       keywords: ['service', 'maintenance', 'settings', 'mechanical'],
       description: 'Services, maintenance'
     },
-    { 
-      name: 'ClockIcon', 
-      component: ClockIcon, 
+    {
+      name: 'ClockIcon',
+      component: ClockIcon,
       keywords: ['time', 'schedule', 'appointment', 'hourly'],
       description: 'Time-based services'
+    },
+    {
+      name: 'CalendarIcon',
+      component: CalendarIcon,
+      keywords: ['calendar', 'recurring', 'subscription', 'scheduled', 'monthly'],
+      description: 'Recurring subscriptions'
     }
   ],
 

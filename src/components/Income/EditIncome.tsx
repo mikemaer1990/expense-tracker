@@ -97,6 +97,7 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               step="0.01"
               accentColor="green"
               error={errors.amount}
+              autoComplete="off"
             />
 
             {/* Date - Floating Label */}
