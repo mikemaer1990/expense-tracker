@@ -6,7 +6,6 @@ interface SelectionCardProps {
   icon: ReactNode
   label: string
   accentColor?: 'blue' | 'green' | 'purple' | 'orange' | 'emerald'
-  minHeight?: string
 }
 
 const accentColorClasses = {
@@ -52,8 +51,7 @@ export default function SelectionCard({
   onClick,
   icon,
   label,
-  accentColor = 'blue',
-  minHeight = '90px'
+  accentColor = 'blue'
 }: SelectionCardProps) {
   const colors = accentColorClasses[accentColor]
 

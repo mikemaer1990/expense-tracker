@@ -212,7 +212,6 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                       icon={<CategoryIcon className="h-6 w-6" />}
                       label={category.name}
                       accentColor="blue"
-                      minHeight="auto"
                     />
                   )
                 })}
