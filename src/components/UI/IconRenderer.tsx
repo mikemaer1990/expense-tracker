@@ -36,24 +36,24 @@ const colorClasses = {
  * @param size - Predefined size (xs, sm, md, lg, xl) 
  * @param color - Color name or custom color class
  */
-export default function IconRenderer({ 
-  iconName, 
-  className = '', 
+export default function IconRenderer({
+  iconName,
+  className = '',
   size = 'md',
-  color 
+  color
 }: IconRendererProps) {
   const IconComponent = getIconComponent(iconName)
-  
+
   // Build the complete className
   const sizeClass = sizeClasses[size]
-  const colorClass = color && color in colorClasses 
+  const colorClass = color && color in colorClasses
     ? colorClasses[color as keyof typeof colorClasses]
-    : color || 'text-gray-600'
-  
+    : color || ''
+
   const finalClassName = `${sizeClass} ${colorClass} ${className}`.trim()
-  
+
   return (
-    <IconComponent 
+    <IconComponent
       className={finalClassName}
       aria-hidden="true"
     />

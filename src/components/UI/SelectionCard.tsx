@@ -71,7 +71,7 @@ export default function SelectionCard({
       {/* Gradient border effect for selected state */}
       {isSelected && (
         <div className={`absolute inset-0 rounded-xl ${colors.selectedGradient} -z-10 p-[2px]`}>
-          <div className="h-full w-full bg-white rounded-xl"></div>
+          <div className={`h-full w-full rounded-xl ${colors.selectedBg}`}></div>
         </div>
       )}
 
