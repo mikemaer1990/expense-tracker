@@ -47,20 +47,41 @@ export default function AddIncome({ onClose, onSuccess }: { onClose: () => void;
       setLoading(true)
 
       if (data.is_recurring) {
-        // Create recurring income entry with frequency in description
-        const frequencyText = data.recurring_frequency === 'biweekly' ? 'every 2 weeks' : `every ${data.recurring_frequency?.replace('ly', '')}`
-        const recurringDescription = `Recurring: ${frequencyText}${data.description ? ` - ${data.description}` : ''}`
-        
-        const { error } = await supabase.from('income').insert({
-          user_id: user!.id,
-          source: data.source,
-          amount: data.amount,
-          date: data.recurring_start_date!,
-          is_recurring: true,
-          description: recurringDescription,
-        })
+        // Create recurring template
+        const { data: template, error: templateError } = await supabase
+          .from('recurring_templates')
+          .insert({
+            user_id: user!.id,
+            template_type: 'income',
+            source: data.source,
+            amount: data.amount,
+            description: data.description || null,
+            frequency: data.recurring_frequency!,
+            start_date: data.recurring_start_date!,
+            end_date: data.recurring_end_date || null,
+            next_generation_date: data.recurring_start_date!,
+          })
+          .select()
+          .single()
 
-        if (error) throw error
+        if (templateError) throw templateError
+
+        // Create first instance immediately (only if start date is today or in the past)
+        const today = new Date().toISOString().split('T')[0]
+        if (data.recurring_start_date! <= today) {
+          const { error: incomeError } = await supabase.from('income').insert({
+            user_id: user!.id,
+            source: data.source,
+            amount: data.amount,
+            date: data.recurring_start_date!,
+            is_recurring: true,
+            recurring_template_id: template.id,
+            is_generated: true,
+            description: data.description || null,
+          })
+
+          if (incomeError) throw incomeError
+        }
       } else {
         // Create one-time income record
         const { error } = await supabase.from('income').insert({

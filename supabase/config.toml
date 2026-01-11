@@ -2,3 +2,6 @@
 
 [functions.splitwise-proxy]
 verify_jwt = false  # Set to true if you want to require authenticated users
+
+[functions.generate-recurring-transactions]
+verify_jwt = false  # Allow calls without JWT (we use custom token auth)

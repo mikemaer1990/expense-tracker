@@ -44,22 +44,18 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get current date and future generation window (e.g., 3 months ahead)
+    // Get current date (only generate for dates that have occurred)
     const today = new Date()
-    const futureWindow = new Date(today)
-    futureWindow.setMonth(futureWindow.getMonth() + 3)
-
     const todayStr = today.toISOString().split('T')[0]
-    const futureWindowStr = futureWindow.toISOString().split('T')[0]
 
-    console.log(`Generating recurring transactions from ${todayStr} to ${futureWindowStr}`)
+    console.log(`Generating recurring transactions up to ${todayStr}`)
 
     // Fetch active templates that need generation
     const { data: templates, error: fetchError } = await supabase
       .from('recurring_templates')
       .select('*')
       .eq('is_active', true)
-      .or(`next_generation_date.is.null,next_generation_date.lte.${futureWindowStr}`)
+      .or(`next_generation_date.is.null,next_generation_date.lte.${todayStr}`)
 
     if (fetchError) throw fetchError
 
@@ -69,7 +65,7 @@ serve(async (req) => {
     // Process each template
     for (const template of (templates as RecurringTemplate[]) || []) {
       try {
-        const generated = await generateInstancesForTemplate(supabase, template, today, futureWindow)
+        const generated = await generateInstancesForTemplate(supabase, template, today)
         generatedCount += generated
       } catch (err) {
         console.error(`Error processing template ${template.id}:`, err)
@@ -108,8 +104,7 @@ serve(async (req) => {
 async function generateInstancesForTemplate(
   supabase: any,
   template: RecurringTemplate,
-  today: Date,
-  futureWindow: Date
+  today: Date
 ): Promise<number> {
   // Determine starting point for generation
   let currentDate = template.last_generated_date
@@ -124,8 +119,8 @@ async function generateInstancesForTemplate(
 
   const instancesToGenerate: any[] = []
 
-  // Generate instances up to the future window
-  while (currentDate <= futureWindow) {
+  // Generate instances up to today only (not future dates)
+  while (currentDate <= today) {
     // Check if we've exceeded end_date
     if (template.end_date && currentDate > new Date(template.end_date)) {
       break

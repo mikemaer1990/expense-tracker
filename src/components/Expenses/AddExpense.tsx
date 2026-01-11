@@ -130,23 +130,47 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
       const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
 
       if (data.is_recurring) {
-        // Create recurring expense entry with frequency in description
-        const frequencyText = data.recurring_frequency === 'biweekly' ? 'every 2 weeks' : `every ${data.recurring_frequency?.replace('ly', '')}`
-        const recurringDescription = `Recurring: ${frequencyText}${data.description ? ` - ${data.description}` : ''}`
-        
-        const { error } = await supabase.from('expenses').insert({
-          user_id: user!.id,
-          expense_type_id: data.expense_type_id,
-          amount: finalAmount,
-          date: data.recurring_start_date!,
-          is_recurring: true,
-          description: recurringDescription,
-          is_split: data.is_split,
-          original_amount: data.is_split ? originalAmount : null,
-          split_with: data.is_split ? data.split_with || null : null,
-        })
+        // Create recurring template
+        const { data: template, error: templateError } = await supabase
+          .from('recurring_templates')
+          .insert({
+            user_id: user!.id,
+            template_type: 'expense',
+            expense_type_id: data.expense_type_id,
+            amount: finalAmount,
+            description: data.description || null,
+            frequency: data.recurring_frequency!,
+            start_date: data.recurring_start_date!,
+            end_date: data.recurring_end_date || null,
+            is_split: data.is_split,
+            original_amount: data.is_split ? originalAmount : null,
+            split_with: data.is_split ? data.split_with || null : null,
+            next_generation_date: data.recurring_start_date!,
+          })
+          .select()
+          .single()
 
-        if (error) throw error
+        if (templateError) throw templateError
+
+        // Create first instance immediately (only if start date is today or in the past)
+        const today = new Date().toISOString().split('T')[0]
+        if (data.recurring_start_date! <= today) {
+          const { error: expenseError } = await supabase.from('expenses').insert({
+            user_id: user!.id,
+            expense_type_id: data.expense_type_id,
+            amount: finalAmount,
+            date: data.recurring_start_date!,
+            is_recurring: true,
+            recurring_template_id: template.id,
+            is_generated: true,
+            description: data.description || null,
+            is_split: data.is_split,
+            original_amount: data.is_split ? originalAmount : null,
+            split_with: data.is_split ? data.split_with || null : null,
+          })
+
+          if (expenseError) throw expenseError
+        }
       } else {
         // Create one-time expense record
         const { error } = await supabase.from('expenses').insert({
