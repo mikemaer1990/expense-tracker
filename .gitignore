@@ -31,3 +31,6 @@ dist-ssr
 .claude/
 CLAUDE.md
 PREFERENCES_MIGRATION.md
+
+# Supabase temporary files
+supabase/.temp/
