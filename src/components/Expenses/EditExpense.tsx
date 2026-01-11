@@ -127,6 +127,21 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
 
         if (templateError) throw templateError
 
+        // Update the current expense being edited
+        const { error: currentError } = await supabase
+          .from('expenses')
+          .update({
+            expense_type_id: data.expense_type_id,
+            amount: finalAmount,
+            description: data.description || null,
+            is_split: data.is_split,
+            original_amount: data.is_split ? originalAmount : null,
+            split_with: data.is_split ? data.split_with || null : null,
+          })
+          .eq('id', expense.id)
+
+        if (currentError) throw currentError
+
         // Delete all FUTURE generated instances (they'll regenerate with new values)
         const today = new Date().toISOString().split('T')[0]
         const { error: deleteError } = await supabase

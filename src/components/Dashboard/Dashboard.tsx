@@ -380,7 +380,7 @@ export default function Dashboard() {
                               {formatCurrency(expense.amount || 0, preferences.currency)}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {new Date(expense.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </div>
                           </div>
                         </div>

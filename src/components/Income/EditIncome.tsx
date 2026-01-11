@@ -64,6 +64,18 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
 
         if (templateError) throw templateError
 
+        // Update the current income being edited
+        const { error: currentError } = await supabase
+          .from('income')
+          .update({
+            source: data.source,
+            amount: data.amount,
+            description: data.description || null,
+          })
+          .eq('id', income.id)
+
+        if (currentError) throw currentError
+
         // Delete all FUTURE generated instances (they'll regenerate with new values)
         const today = new Date().toISOString().split('T')[0]
         const { error: deleteError } = await supabase
