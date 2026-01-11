@@ -80,6 +80,7 @@ export default function History() {
             is_split,
             original_amount,
             split_with,
+            splitwise_expense_id,
             expense_types (
               id,
               name,
@@ -468,13 +469,19 @@ export default function History() {
                                 <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                                   <span>{transaction.subcategory || 'Unknown'}</span>
                                   {transaction.is_recurring && (
-                                    <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+                                    <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full inline-flex items-center gap-1">
                                       🔄 Recurring
                                     </span>
                                   )}
                                   {transaction.is_split && (
-                                    <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                                    <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full inline-flex items-center gap-1">
                                       👥 Split
+                                    </span>
+                                  )}
+                                  {transaction.splitwise_expense_id && (
+                                    <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full inline-flex items-center gap-1">
+                                      <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
+                                      <span>Splitwise</span>
                                     </span>
                                   )}
                                 </div>
@@ -551,13 +558,18 @@ export default function History() {
                                   )}
                                 </span>
                                 {transaction.is_recurring && (
-                                  <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0">
+                                  <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0 inline-flex items-center">
                                     🔄
                                   </span>
                                 )}
                                 {transaction.is_split && (
-                                  <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0">
+                                  <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0 inline-flex items-center">
                                     👥
+                                  </span>
+                                )}
+                                {transaction.splitwise_expense_id && (
+                                  <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full flex-shrink-0 inline-flex items-center">
+                                    <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
                                   </span>
                                 )}
                               </div>
