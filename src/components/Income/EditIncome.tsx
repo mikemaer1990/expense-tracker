@@ -24,6 +24,9 @@ interface EditIncomeProps {
 export default function EditIncome({ income, onClose, onSuccess }: EditIncomeProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editMode, setEditMode] = useState<'single' | 'all' | null>(
+    income.recurring_template_id ? null : 'single'
+  )
 
   const {
     register,
@@ -47,18 +50,52 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
       setError('')
       setLoading(true)
 
-      const { error } = await supabase
-        .from('income')
-        .update({
+      // If editing all future instances of a recurring income
+      if (editMode === 'all' && income.recurring_template_id) {
+        // Update the template
+        const { error: templateError } = await supabase
+          .from('recurring_templates')
+          .update({
+            source: data.source,
+            amount: data.amount,
+            description: data.description || null,
+          })
+          .eq('id', income.recurring_template_id)
+
+        if (templateError) throw templateError
+
+        // Delete all FUTURE generated instances (they'll regenerate with new values)
+        const today = new Date().toISOString().split('T')[0]
+        const { error: deleteError } = await supabase
+          .from('income')
+          .delete()
+          .eq('recurring_template_id', income.recurring_template_id)
+          .eq('is_generated', true)
+          .gt('date', today)
+
+        if (deleteError) throw deleteError
+      } else {
+        // Edit single instance only (or non-recurring)
+        const updateData: any = {
           source: data.source,
           amount: data.amount,
           date: data.date,
-          is_recurring: data.is_recurring,
           description: data.description || null,
-        })
-        .eq('id', income.id)
+        }
 
-      if (error) throw error
+        // If editing single instance of recurring income, unlink from template
+        if (editMode === 'single' && income.recurring_template_id) {
+          updateData.recurring_template_id = null
+          updateData.is_recurring = false
+        }
+
+        const { error } = await supabase
+          .from('income')
+          .update(updateData)
+          .eq('id', income.id)
+
+        if (error) throw error
+      }
 
       onSuccess()
       onClose()
@@ -67,6 +104,41 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show edit choice modal if this is a recurring income
+  if (income.recurring_template_id && editMode === null) {
+    return (
+      <Modal title="Edit Recurring Income" onClose={onClose} accentColor="green">
+        <div className="p-6 space-y-6">
+          <p className="text-gray-700">
+            This is recurring income. What would you like to edit?
+          </p>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => setEditMode('single')}
+              className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+            >
+              <div className="font-semibold text-gray-900">Edit only this one</div>
+              <div className="text-sm text-gray-600 mt-1">
+                Changes will only affect this single transaction
+              </div>
+            </button>
+
+            <button
+              onClick={() => setEditMode('all')}
+              className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+            >
+              <div className="font-semibold text-gray-900">Edit all future instances</div>
+              <div className="text-sm text-gray-600 mt-1">
+                Updates the template and all future occurrences
+              </div>
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
   }
 
   return (

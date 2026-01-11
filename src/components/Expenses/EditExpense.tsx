@@ -48,6 +48,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [editMode, setEditMode] = useState<'single' | 'all' | null>(
+    expense.recurring_template_id ? null : 'single'
+  )
 
   // Parse recurring information from description
   const isCurrentlyRecurring = expense.is_recurring || false
@@ -107,34 +110,58 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       const originalAmount = Number(data.amount)
       const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
 
-      let updateData: any = {
-        expense_type_id: data.expense_type_id,
-        amount: finalAmount,
-        is_recurring: data.is_recurring,
-        is_split: data.is_split,
-        original_amount: data.is_split ? originalAmount : null,
-        split_with: data.is_split ? data.split_with || null : null,
-      }
+      // If editing all future instances of a recurring expense
+      if (editMode === 'all' && expense.recurring_template_id) {
+        // Update the template
+        const { error: templateError } = await supabase
+          .from('recurring_templates')
+          .update({
+            expense_type_id: data.expense_type_id,
+            amount: finalAmount,
+            description: data.description || null,
+            is_split: data.is_split,
+            original_amount: data.is_split ? originalAmount : null,
+            split_with: data.is_split ? data.split_with || null : null,
+          })
+          .eq('id', expense.recurring_template_id)
 
-      if (data.is_recurring) {
-        // Create recurring expense entry with frequency in description
-        const frequencyText = data.recurring_frequency === 'biweekly' ? 'every 2 weeks' : `every ${data.recurring_frequency?.replace('ly', '')}`
-        const recurringDescription = `Recurring: ${frequencyText}${data.description ? ` - ${data.description}` : ''}`
+        if (templateError) throw templateError
 
-        updateData.date = data.recurring_start_date!
-        updateData.description = recurringDescription
+        // Delete all FUTURE generated instances (they'll regenerate with new values)
+        const today = new Date().toISOString().split('T')[0]
+        const { error: deleteError } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('recurring_template_id', expense.recurring_template_id)
+          .eq('is_generated', true)
+          .gt('date', today)
+
+        if (deleteError) throw deleteError
       } else {
-        // One-time expense
-        updateData.date = data.date
-        updateData.description = data.description || null
+        // Edit single instance only (or non-recurring)
+        const updateData: any = {
+          expense_type_id: data.expense_type_id,
+          amount: finalAmount,
+          date: data.date,
+          description: data.description || null,
+          is_split: data.is_split,
+          original_amount: data.is_split ? originalAmount : null,
+          split_with: data.is_split ? data.split_with || null : null,
+        }
+
+        // If editing single instance of recurring expense, unlink from template
+        if (editMode === 'single' && expense.recurring_template_id) {
+          updateData.recurring_template_id = null
+          updateData.is_recurring = false
+        }
+
+        const { error } = await supabase
+          .from('expenses')
+          .update(updateData)
+          .eq('id', expense.id)
+
+        if (error) throw error
       }
-
-      const { error } = await supabase
-        .from('expenses')
-        .update(updateData)
-        .eq('id', expense.id)
-
-      if (error) throw error
 
       onSuccess()
       onClose()
@@ -153,6 +180,41 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
     acc[categoryName].push(type)
     return acc
   }, {} as Record<string, ExpenseType[]>)
+
+  // Show edit choice modal if this is a recurring expense
+  if (expense.recurring_template_id && editMode === null) {
+    return (
+      <Modal title="Edit Recurring Expense" onClose={onClose} accentColor="blue">
+        <div className="p-6 space-y-6">
+          <p className="text-gray-700">
+            This is a recurring expense. What would you like to edit?
+          </p>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => setEditMode('single')}
+              className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-semibold text-gray-900">Edit only this one</div>
+              <div className="text-sm text-gray-600 mt-1">
+                Changes will only affect this single transaction
+              </div>
+            </button>
+
+            <button
+              onClick={() => setEditMode('all')}
+              className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-semibold text-gray-900">Edit all future instances</div>
+              <div className="text-sm text-gray-600 mt-1">
+                Updates the template and all future occurrences
+              </div>
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
 
   return (
     <Modal

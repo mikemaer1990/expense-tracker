@@ -32,6 +32,11 @@ export default function History() {
   const [expandedNames, setExpandedNames] = useState<Set<string>>(new Set())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [deleteModal, setDeleteModal] = useState<{
+    show: boolean
+    transaction: any
+    type: 'expense' | 'income'
+  } | null>(null)
 
   const loadExpenseTypes = useCallback(async () => {
     try {
@@ -206,21 +211,45 @@ export default function History() {
   }
 
   const handleDelete = async (id: string, type: 'expense' | 'income') => {
-    // Find the transaction before deleting for undo functionality
-    const transactionToDelete = transactions.find(t => t.id === id && t.type === type)
-    
-    try {
-      const { error } = await supabase
-        .from(type === 'expense' ? 'expenses' : 'income')
-        .delete()
-        .eq('id', id)
+    // Find the transaction
+    const transaction = transactions.find(t => t.id === id && t.type === type)
 
-      if (error) throw error
+    // If it's a recurring transaction, show modal for choice
+    if (transaction?.recurring_template_id) {
+      setDeleteModal({ show: true, transaction, type })
+      return
+    }
+
+    // Non-recurring transaction - delete immediately
+    await performDelete(id, type, transaction, 'single')
+  }
+
+  const performDelete = async (id: string, type: 'expense' | 'income', transactionToDelete: any, mode: 'single' | 'all') => {
+    try {
+      if (mode === 'all' && transactionToDelete?.recurring_template_id) {
+        // Delete the template (CASCADE will delete all linked instances)
+        const { error } = await supabase
+          .from('recurring_templates')
+          .delete()
+          .eq('id', transactionToDelete.recurring_template_id)
+
+        if (error) throw error
+      } else {
+        // Delete single transaction only
+        const { error } = await supabase
+          .from(type === 'expense' ? 'expenses' : 'income')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+      }
 
       // Show success toast with undo option
       setToast({
         show: true,
-        message: `${type === 'expense' ? 'Expense' : 'Income'} deleted`,
+        message: mode === 'all' ?
+          `All recurring ${type === 'expense' ? 'expenses' : 'income'} deleted` :
+          `${type === 'expense' ? 'Expense' : 'Income'} deleted`,
         type: 'success',
         deletedTransaction: transactionToDelete,
         deletedType: type
@@ -658,6 +687,56 @@ export default function History() {
           onClose={handleEditClose}
           onSuccess={handleEditSuccess}
         />
+      )}
+
+      {/* Delete Confirmation Modal for Recurring Transactions */}
+      {deleteModal?.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Delete Recurring {deleteModal.type === 'expense' ? 'Expense' : 'Income'}
+            </h3>
+
+            <p className="text-gray-700">
+              This is a recurring transaction. What would you like to delete?
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  await performDelete(deleteModal.transaction.id, deleteModal.type, deleteModal.transaction, 'single')
+                  setDeleteModal(null)
+                }}
+                className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
+              >
+                <div className="font-semibold text-gray-900">Delete only this one</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Removes only this transaction
+                </div>
+              </button>
+
+              <button
+                onClick={async () => {
+                  await performDelete(deleteModal.transaction.id, deleteModal.type, deleteModal.transaction, 'all')
+                  setDeleteModal(null)
+                }}
+                className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
+              >
+                <div className="font-semibold text-gray-900">Delete all recurring instances</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Deletes the template and all linked transactions
+                </div>
+              </button>
+
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="w-full p-3 text-center border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast Notification */}
