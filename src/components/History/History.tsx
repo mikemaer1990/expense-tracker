@@ -82,6 +82,7 @@ export default function History() {
             created_at,
             expense_type_id,
             is_recurring,
+            recurring_template_id,
             is_split,
             original_amount,
             split_with,
@@ -118,7 +119,7 @@ export default function History() {
       if (filter === 'all' || filter === 'income') {
         const { data: incomeData, error: incomeError } = await supabase
           .from('income')
-          .select('id, amount, description, date, created_at, source, is_recurring')
+          .select('id, amount, description, date, created_at, source, is_recurring, recurring_template_id')
           .eq('user_id', user.id)
           .gte('date', getYearStartDate(selectedYear))
           .lte('date', getYearEndDate(selectedYear))
