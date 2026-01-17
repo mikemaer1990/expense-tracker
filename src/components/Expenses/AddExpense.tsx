@@ -433,7 +433,13 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-100">
                 <h4 className="text-sm font-semibold text-purple-900 mb-1.5">Recurring Expense</h4>
                 <p className="text-sm text-purple-700 leading-relaxed">
-                  <span className="font-medium">${(Number(watch('amount')) || 0).toFixed(2)}</span> {watch('description') ? `for ${watch('description')}` : ''} every{' '}
+                  <span className="font-medium">
+                    ${isSplit ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
+                  </span>
+                  {isSplit && (
+                    <span className="text-purple-600"> (your share of ${(Number(amount) || 0).toFixed(2)})</span>
+                  )}
+                  {watch('description') ? ` for ${watch('description')}` : ''} every{' '}
                   <span className="font-medium">{recurringFrequency === 'biweekly' ? '2 weeks' : recurringFrequency.replace('ly', '')}</span>
                 </p>
               </div>

@@ -51,23 +51,31 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   const [editMode, setEditMode] = useState<'single' | 'all' | null>(
     expense.recurring_template_id ? null : 'single'
   )
+  const [templateData, setTemplateData] = useState<{
+    frequency: string
+    start_date: string
+    end_date: string | null
+  } | null>(null)
 
-  // Parse recurring information from description
+  // Fetch recurring template data if this is a recurring expense
+  useEffect(() => {
+    async function fetchTemplate() {
+      if (expense.recurring_template_id) {
+        const { data, error } = await supabase
+          .from('recurring_templates')
+          .select('frequency, start_date, end_date')
+          .eq('id', expense.recurring_template_id)
+          .single()
+
+        if (!error && data) {
+          setTemplateData(data)
+        }
+      }
+    }
+    fetchTemplate()
+  }, [expense.recurring_template_id])
+
   const isCurrentlyRecurring = expense.is_recurring || false
-  const parseRecurringFromDescription = (description: string) => {
-    if (!description || !description.includes('Recurring:')) return { frequency: '', cleanDescription: description }
-
-    const parts = description.split('Recurring: ')[1] || ''
-    if (parts.includes('every 2 weeks')) return { frequency: 'biweekly', cleanDescription: parts.split(' - ')[1] || '' }
-    if (parts.includes('every week')) return { frequency: 'weekly', cleanDescription: parts.split(' - ')[1] || '' }
-    if (parts.includes('every month')) return { frequency: 'monthly', cleanDescription: parts.split(' - ')[1] || '' }
-    if (parts.includes('every quarter')) return { frequency: 'quarterly', cleanDescription: parts.split(' - ')[1] || '' }
-    if (parts.includes('every year')) return { frequency: 'yearly', cleanDescription: parts.split(' - ')[1] || '' }
-
-    return { frequency: '', cleanDescription: parts.split(' - ')[1] || parts }
-  }
-
-  const { frequency: currentFrequency, cleanDescription } = parseRecurringFromDescription(expense.description || '')
 
   const {
     register,
@@ -80,9 +88,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       expense_type_id: expense.expense_type_id || '',
       amount: expense.is_split ? expense.original_amount || expense.amount : expense.amount,
       date: expense.date,
-      description: cleanDescription || '',
+      description: expense.description || '',
       is_recurring: isCurrentlyRecurring,
-      recurring_frequency: currentFrequency as any,
+      recurring_frequency: undefined,
       recurring_start_date: expense.date,
       is_split: expense.is_split || false,
       split_with: expense.split_with || '',
@@ -100,6 +108,17 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       setValue('expense_type_id', expense.expense_type_id)
     }
   }, [expense.expense_type_id, setValue])
+
+  // Populate recurring fields when template data loads
+  useEffect(() => {
+    if (templateData) {
+      setValue('recurring_frequency', templateData.frequency as any)
+      setValue('recurring_start_date', templateData.start_date)
+      if (templateData.end_date) {
+        setValue('recurring_end_date', templateData.end_date)
+      }
+    }
+  }, [templateData, setValue])
 
   const onSubmit = async (data: ExpenseForm) => {
     try {
@@ -119,6 +138,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
             expense_type_id: data.expense_type_id,
             amount: finalAmount,
             description: data.description || null,
+            frequency: data.recurring_frequency,
+            start_date: data.recurring_start_date,
+            end_date: data.recurring_end_date || null,
             is_split: data.is_split,
             original_amount: data.is_split ? originalAmount : null,
             split_with: data.is_split ? data.split_with || null : null,
@@ -154,6 +176,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
         if (deleteError) throw deleteError
       } else {
         // Edit single instance only (or non-recurring)
+        // Keep recurring link intact - just modify this instance's values
         const updateData: any = {
           expense_type_id: data.expense_type_id,
           amount: finalAmount,
@@ -162,12 +185,6 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
           is_split: data.is_split,
           original_amount: data.is_split ? originalAmount : null,
           split_with: data.is_split ? data.split_with || null : null,
-        }
-
-        // If editing single instance of recurring expense, unlink from template
-        if (editMode === 'single' && expense.recurring_template_id) {
-          updateData.recurring_template_id = null
-          updateData.is_recurring = false
         }
 
         const { error } = await supabase
@@ -430,7 +447,13 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-100">
                 <h4 className="text-sm font-semibold text-purple-900 mb-1.5">Recurring Expense</h4>
                 <p className="text-sm text-purple-700 leading-relaxed">
-                  <span className="font-medium">${(Number(watch('amount')) || 0).toFixed(2)}</span> {watch('description') ? `for ${watch('description')}` : ''} every{' '}
+                  <span className="font-medium">
+                    ${isSplit ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
+                  </span>
+                  {isSplit && (
+                    <span className="text-purple-600"> (your share of ${(Number(amount) || 0).toFixed(2)})</span>
+                  )}
+                  {watch('description') ? ` for ${watch('description')}` : ''} every{' '}
                   <span className="font-medium">{recurringFrequency === 'biweekly' ? '2 weeks' : recurringFrequency.replace('ly', '')}</span>
                 </p>
               </div>

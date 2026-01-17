@@ -2,7 +2,31 @@
 
 ## 🎯 **High Priority**
 
-### 1. 🔥 Eliminate Scrolling in Add Expense Form
+### 1. 🔄 Manage Recurring Transactions UI
+**Status**: Pending
+**Description**: Add a dedicated interface for users to view and manage their recurring transaction templates
+
+**Problem**:
+- Users can only interact with recurring templates through generated instances
+- No way to view all active recurring transactions in one place
+- No way to pause/resume, edit, or delete a template directly
+- Orphaned templates can exist if all instances are deleted individually
+
+**Proposed Solutions**:
+1. **Dedicated "Recurring Transactions" page** - New route showing all templates with edit/delete/pause actions
+2. **Section in Settings** - List of active recurring templates with management options
+3. **Filter in History** - "Show recurring templates" toggle to view and manage them
+
+**Requirements**:
+- List all recurring templates (expenses and income)
+- Show frequency, amount, next generation date
+- Edit template directly (updates all future instances)
+- Delete template (removes template and all future instances)
+- Optional: Pause/resume functionality
+
+---
+
+### 2. 🔥 Eliminate Scrolling in Add Expense Form
 **Status**: Pending (deferred for review)
 **Description**: Redesign Add Expense form to eliminate all scrolling through creative UX solutions
 
@@ -44,7 +68,7 @@
 
 ---
 
-### 2. Category Loading Race Condition
+### 3. Category Loading Race Condition
 **Description**: Fix brief "no categories found" flash for new users
 **Solutions**:
 - Retry logic with 1.5s delay

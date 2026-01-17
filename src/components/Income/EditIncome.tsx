@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { supabase } from '../../lib/supabase'
 import Modal from '../UI/Modal'
 import FloatingLabelInput from '../UI/FloatingLabelInput'
 import FloatingLabelTextarea from '../UI/FloatingLabelTextarea'
+import FloatingLabelSelect from '../UI/FloatingLabelSelect'
 import CheckboxField from '../UI/CheckboxField'
 import FormButtons from '../UI/FormButtons'
 
@@ -12,6 +13,9 @@ interface IncomeForm {
   amount: number
   date: string
   is_recurring: boolean
+  recurring_frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly'
+  recurring_start_date?: string
+  recurring_end_date?: string
   description?: string
 }
 
@@ -27,10 +31,34 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
   const [editMode, setEditMode] = useState<'single' | 'all' | null>(
     income.recurring_template_id ? null : 'single'
   )
+  const [templateData, setTemplateData] = useState<{
+    frequency: string
+    start_date: string
+    end_date: string | null
+  } | null>(null)
+
+  // Fetch recurring template data if this is recurring income
+  useEffect(() => {
+    async function fetchTemplate() {
+      if (income.recurring_template_id) {
+        const { data, error } = await supabase
+          .from('recurring_templates')
+          .select('frequency, start_date, end_date')
+          .eq('id', income.recurring_template_id)
+          .single()
+
+        if (!error && data) {
+          setTemplateData(data)
+        }
+      }
+    }
+    fetchTemplate()
+  }, [income.recurring_template_id])
 
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<IncomeForm>({
@@ -39,11 +67,25 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
       amount: income.amount,
       date: income.date,
       is_recurring: income.is_recurring || false,
+      recurring_frequency: undefined,
+      recurring_start_date: income.date,
       description: income.description || '',
     },
   })
 
   const isRecurring = watch('is_recurring')
+  const recurringFrequency = watch('recurring_frequency')
+
+  // Populate recurring fields when template data loads
+  useEffect(() => {
+    if (templateData) {
+      setValue('recurring_frequency', templateData.frequency as any)
+      setValue('recurring_start_date', templateData.start_date)
+      if (templateData.end_date) {
+        setValue('recurring_end_date', templateData.end_date)
+      }
+    }
+  }, [templateData, setValue])
 
   const onSubmit = async (data: IncomeForm) => {
     try {
@@ -59,6 +101,9 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
             source: data.source,
             amount: data.amount,
             description: data.description || null,
+            frequency: data.recurring_frequency,
+            start_date: data.recurring_start_date,
+            end_date: data.recurring_end_date || null,
           })
           .eq('id', income.recurring_template_id)
 
@@ -88,17 +133,12 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
         if (deleteError) throw deleteError
       } else {
         // Edit single instance only (or non-recurring)
+        // Keep recurring link intact - just modify this instance's values
         const updateData: any = {
           source: data.source,
           amount: data.amount,
           date: data.date,
           description: data.description || null,
-        }
-
-        // If editing single instance of recurring income, unlink from template
-        if (editMode === 'single' && income.recurring_template_id) {
-          updateData.recurring_template_id = null
-          updateData.is_recurring = false
         }
 
         const { error } = await supabase
@@ -184,21 +224,58 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
               autoComplete="off"
             />
 
-            {/* Date - Floating Label */}
-            <FloatingLabelInput
-              {...register('date', { required: 'Date is required' })}
-              label="Date"
-              type="date"
-              accentColor="green"
-              error={errors.date}
-            />
-
             {/* Recurring Toggle */}
             <CheckboxField
               {...register('is_recurring')}
               label="This is recurring income"
               accentColor="green"
             />
+
+            {/* One-time Income Fields */}
+            {!isRecurring && (
+              <FloatingLabelInput
+                {...register('date', { required: !isRecurring ? 'Date is required' : false })}
+                label="Date"
+                type="date"
+                accentColor="green"
+                error={errors.date}
+              />
+            )}
+
+            {/* Recurring Income Fields */}
+            {isRecurring && (
+              <>
+                <FloatingLabelSelect
+                  {...register('recurring_frequency', { required: isRecurring ? 'Frequency is required' : false })}
+                  label="Frequency"
+                  accentColor="green"
+                  error={errors.recurring_frequency}
+                >
+                  <option value="">Select frequency</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly (Every 2 weeks)</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly (Every 3 months)</option>
+                  <option value="yearly">Yearly</option>
+                </FloatingLabelSelect>
+
+                <FloatingLabelInput
+                  {...register('recurring_start_date', { required: isRecurring ? 'Start date is required' : false })}
+                  label="Start Date"
+                  type="date"
+                  accentColor="green"
+                  error={errors.recurring_start_date}
+                />
+
+                <FloatingLabelInput
+                  {...register('recurring_end_date')}
+                  label="End Date (optional)"
+                  type="date"
+                  accentColor="green"
+                />
+                <p className="mt-1.5 text-xs text-gray-500">Leave empty for ongoing income</p>
+              </>
+            )}
 
             {/* Description - Floating Label */}
             <FloatingLabelTextarea
@@ -213,18 +290,19 @@ export default function EditIncome({ income, onClose, onSuccess }: EditIncomePro
             )}
 
             {/* Preview for recurring */}
-            {isRecurring && (
+            {isRecurring && recurringFrequency && (
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-100">
                 <h4 className="text-sm font-semibold text-purple-900 mb-1.5">Recurring Income</h4>
                 <p className="text-sm text-purple-700 leading-relaxed">
-                  <span className="font-medium">${(Number(watch('amount')) || 0).toFixed(2)}</span> from {watch('source') || 'income source'}
+                  <span className="font-medium">${(Number(watch('amount')) || 0).toFixed(2)}</span> from {watch('source') || 'income source'} every{' '}
+                  <span className="font-medium">{recurringFrequency === 'biweekly' ? '2 weeks' : recurringFrequency.replace('ly', '')}</span>
                 </p>
               </div>
             )}
 
             <FormButtons
               onCancel={onClose}
-              submitLabel="Update Income"
+              submitLabel={isRecurring ? 'Update Recurring Income' : 'Update Income'}
               isLoading={loading}
               loadingLabel="Updating..."
               accentColor="green"
