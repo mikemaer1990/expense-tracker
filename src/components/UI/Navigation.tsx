@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
   ClockIcon,
+  ArrowPathIcon,
   ChartBarIcon,
   TagIcon,
   Cog6ToothIcon,
@@ -17,6 +18,7 @@ import UserDropdown from './UserDropdown';
 const navItems = [
   { path: '/', label: 'Dashboard', Icon: HomeIcon },
   { path: '/history', label: 'History', Icon: ClockIcon },
+  { path: '/recurring', label: 'Recurring', Icon: ArrowPathIcon },
   { path: '/analytics', label: 'Analytics', Icon: ChartBarIcon },
   { path: '/expense-types', label: 'Expense Types', Icon: TagIcon },
   { path: '/settings', label: 'Settings', Icon: Cog6ToothIcon },
