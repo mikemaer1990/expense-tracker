@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PlusIcon, PencilIcon, TrashIcon, Cog6ToothIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon, TrashIcon, Cog6ToothIcon, ChevronDownIcon, TagIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import IconRenderer from '../UI/IconRenderer'
@@ -197,7 +197,10 @@ export default function ExpenseTypeManager() {
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Manage Expense Types</h1>
+            <div className="flex items-center space-x-2 mb-2">
+              <TagIcon className="h-6 w-6 text-blue-600" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Manage Expense Types</h1>
+            </div>
             <p className="text-sm md:text-base text-gray-600">Organize your expenses with custom categories and icons</p>
           </div>
           <button

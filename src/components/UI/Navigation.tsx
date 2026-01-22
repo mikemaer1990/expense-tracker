@@ -21,7 +21,6 @@ const navItems = [
   { path: '/recurring', label: 'Recurring', Icon: ArrowPathIcon },
   { path: '/analytics', label: 'Analytics', Icon: ChartBarIcon },
   { path: '/expense-types', label: 'Expense Types', Icon: TagIcon },
-  { path: '/settings', label: 'Settings', Icon: Cog6ToothIcon },
 ];
 
 export default function Navigation() {
@@ -133,6 +132,24 @@ export default function Navigation() {
                 </Link>
               );
             })}
+
+            {/* Settings - Mobile Only */}
+            <Link
+              to="/settings"
+              onClick={handleMobileNavClick}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 ${
+                isActive('/settings')
+                  ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <Cog6ToothIcon
+                className={`h-5 w-5 flex-shrink-0 ${
+                  isActive('/settings') ? 'text-blue-600' : 'text-gray-400'
+                }`}
+              />
+              <span>Settings</span>
+            </Link>
 
             {/* Sign Out Button - Subtle Design */}
             <button

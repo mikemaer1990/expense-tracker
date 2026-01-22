@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, TrashIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { getYearStartDate, getYearEndDate, getAvailableYears } from '../../utils/date'
@@ -334,9 +334,12 @@ export default function History() {
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0 overflow-hidden">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Transaction History{availableYears.length > 1 ? ` (${selectedYear})` : ''}
-            </h1>
+            <div className="flex items-center space-x-2 mb-2">
+              <ClockIcon className="h-6 w-6 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">
+                Transaction History{availableYears.length > 1 ? ` (${selectedYear})` : ''}
+              </h1>
+            </div>
             <p className="text-gray-600">View and manage your expenses and income</p>
           </div>
 

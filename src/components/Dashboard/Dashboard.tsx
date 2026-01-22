@@ -6,6 +6,7 @@ import {
   CalendarDaysIcon,
   BanknotesIcon,
   ClipboardDocumentListIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useUserPreferences } from "../../hooks/useUserPreferences";
@@ -162,7 +163,10 @@ export default function Dashboard() {
           {/* Page Header with Year Selector */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <div className="flex items-center space-x-2">
+                <HomeIcon className="h-6 w-6 text-blue-600" />
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">Overview of your finances</p>

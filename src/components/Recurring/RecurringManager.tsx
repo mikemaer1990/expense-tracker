@@ -255,7 +255,10 @@ export default function RecurringManager() {
             <div className="mb-6">
               <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">Recurring Transactions</h1>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <ArrowPathIcon className="h-6 w-6 text-blue-600" />
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">Recurring Transactions</h1>
+                  </div>
                   <p className="text-sm md:text-base text-gray-600">Manage your recurring expenses and income</p>
                 </div>
               </div>

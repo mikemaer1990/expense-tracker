@@ -217,8 +217,11 @@ export default function Settings() {
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 mb-2">
+              <CogIcon className="h-6 w-6 text-blue-600" />
+              <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+            </div>
+            <p className="text-sm text-gray-600">
               Manage your account preferences and app settings
             </p>
           </div>
