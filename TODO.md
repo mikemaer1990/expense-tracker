@@ -68,24 +68,14 @@
 
 ---
 
-### 3. Complete Export Functionality
+### 4. Complete Export Functionality
 **Status**: Partially Complete (CSV export in Analytics DataGrid)
 **Description**: Expand data export capabilities
 **Remaining Work**:
-- Activate export functionality in History component
+- Activate export functionality in Transactions page
 - Date range selection for exports
 - Category filtering for exports
 - Multiple format support (Excel, PDF)
-
----
-
-### 4. Recurring Transactions UI
-**Status**: Infrastructure Complete (database fields exist)
-**Description**: Activate recurring transaction UI features
-**Remaining Work**:
-- Auto-generation system interface
-- Recurring transaction management UI
-- Integration with budget tracking
 
 ---
 
@@ -104,18 +94,18 @@
 ### 6. Quick Actions & Navigation
 - Floating Action Button (FAB) for quick "Add Expense"
 - Expandable FAB to show "Add Income" option
-- Pull-to-refresh functionality on Dashboard and History
+- Pull-to-refresh functionality on Dashboard and Transactions
 
 ---
 
-### 6. Analytics Mobile Optimization
+### 7. Analytics Mobile Optimization
 - Better touch handling for Chart.js interactions
 - Simplified mobile chart views with larger touch areas
 - Enhanced horizontal scroll indicators for data tables
 
 ---
 
-### 7. Dashboard Visual Polish
+### 8. Dashboard Visual Polish
 - Enhanced visual hierarchy with better mobile spacing
 - Larger text for key financial numbers
 - Touch-friendly quick action areas
@@ -124,7 +114,18 @@
 
 ## 📊 **Feature Expansion (Medium Priority)**
 
-### 8. Budget Tracking System
+### 9. Monthly Analytics Improvements
+**Status**: Pending
+**Description**: Enhance monthly analytics view with more actionable insights
+**Proposed additions**:
+- vs Last Month comparisons on Income, Expenses, and Surplus cards
+- Savings rate % and daily average spending stats
+- Top 5 spenders list with amount, % of total, and trend vs last month
+- Income vs expense progress bar (e.g. "You've spent 68% of your income")
+
+---
+
+### 10. Budget Tracking System
 **Description**: Monthly budget limits and warnings
 - Set monthly budget limits per category
 - Visual progress indicators
@@ -133,7 +134,7 @@
 
 ---
 
-### 9. Income Tracking Improvements
+### 11. Income Tracking Improvements
 **Description**: Enhanced income management system
 - Income categories (Salary, Freelance, Investments, etc.)
 - Better recurring income support
@@ -141,7 +142,7 @@
 
 ---
 
-### 10. Dark Mode Implementation
+### 12. Dark Mode Implementation
 **Status**: Settings Page Ready (placeholder toggle)
 **Remaining Work**:
 - Dark theme CSS variables
@@ -152,7 +153,7 @@
 
 ## 🔧 **Lower Priority**
 
-### 11. Search & Advanced Filtering
+### 13. Search & Advanced Filtering
 **Description**: Enhanced search capabilities
 - Text search across transactions
 - Date range pickers
@@ -160,7 +161,7 @@
 
 ---
 
-### 12. PWA Features
+### 14. PWA Features
 **Description**: Progressive Web App capabilities
 - Offline support with local storage
 - Install as mobile app
@@ -168,7 +169,7 @@
 
 ---
 
-### 13. Performance & Quality
+### 15. Performance & Quality
 **Description**: Code quality and performance improvements
 - Error boundary implementation
 - Unit testing setup (Jest/Vitest)
@@ -176,7 +177,7 @@
 
 ---
 
-### 14. Database Cleanup - Expense Type Naming
+### 16. Database Cleanup - Expense Type Naming
 **Description**: Update "Rent/Mortgage" → "Rent / Mortgage" for consistency
 **Changes Needed**:
 - Update database trigger `create_default_expense_types()`
@@ -185,5 +186,5 @@
 
 ---
 
-**Last Updated**: January 11, 2026
+**Last Updated**: April 12, 2026
 **Project Status**: Production-ready, deployed on Vercel
