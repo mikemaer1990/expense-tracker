@@ -61,14 +61,12 @@ export default function Dashboard() {
         setAvailableYears(getAvailableYears(dates));
       }
 
-      // Get current month expenses
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
+      // Get expenses for current month in the selected year
+      const currentMonth = new Date().getMonth();
+      const firstDayOfMonth = new Date(selectedYear, currentMonth, 1)
         .toISOString()
         .split("T")[0];
-      const firstDayOfNextMonth = new Date(currentYear, currentMonth + 1, 1)
+      const firstDayOfNextMonth = new Date(selectedYear, currentMonth + 1, 1)
         .toISOString()
         .split("T")[0];
 
@@ -170,7 +168,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">Overview of your finances</p>
-              {availableYears.length > 1 && (
+              {availableYears.length > 0 && (
                 <div className="flex bg-gray-100 rounded-md p-1">
                   {availableYears.map(year => (
                     <button
@@ -261,7 +259,9 @@ export default function Dashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        This Month
+                        {selectedYear === new Date().getFullYear()
+                          ? 'This Month'
+                          : new Date(selectedYear, new Date().getMonth(), 1).toLocaleString('default', { month: 'long' })}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {formatCurrency(monthlyExpenses, preferences.currency)}
@@ -324,7 +324,7 @@ export default function Dashboard() {
                   Recent Expenses
                 </h3>
                 <Link
-                  to="/history"
+                  to="/transactions"
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   View All →
@@ -342,7 +342,7 @@ export default function Dashboard() {
                       <div
                         key={expense.id}
                         className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer"
-                        onClick={() => window.location.href = '/history'}
+                        onClick={() => window.location.href = '/transactions'}
                       >
                         <div className="flex items-center justify-between gap-3">
                           {/* Left side: Icon + Name + Tags */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../lib/supabase'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
 import IconRenderer from '../UI/IconRenderer'
@@ -197,8 +197,8 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
 
       onSuccess()
       onClose()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -297,7 +297,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                               key={type.id}
                               isSelected={isSelected}
                               onClick={() => {
-                                register('expense_type_id').onChange({ target: { value: type.id, name: 'expense_type_id' } })
+                                setValue('expense_type_id', type.id, { shouldValidate: true })
                               }}
                               icon={
                                 <IconRenderer
@@ -317,8 +317,12 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                 })}
               </div>
 
+              <input type="hidden" {...register('expense_type_id', { required: 'Please select an expense type' })} />
               {errors.expense_type_id && (
-                <p className="mt-2 text-sm text-red-600">{errors.expense_type_id.message}</p>
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <ExclamationCircleIcon className="h-4 w-4 flex-shrink-0" />
+                  <span>{errors.expense_type_id.message}</span>
+                </div>
               )}
             </div>
           </div>

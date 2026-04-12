@@ -3,8 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
 import Dashboard from './components/Dashboard/Dashboard'
-import History from './components/History/History'
-import RecurringManager from './components/Recurring/RecurringManager'
+import Transactions from './components/Transactions/Transactions'
 import Analytics from './components/Analytics/Analytics'
 import ExpenseTypeManager from './components/ExpenseTypes/ExpenseTypeManager'
 import Settings from './components/Settings/Settings'
@@ -27,18 +26,10 @@ function App() {
               }
             />
             <Route
-              path="/history"
+              path="/transactions"
               element={
                 <ProtectedRoute>
-                  <History />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recurring"
-              element={
-                <ProtectedRoute>
-                  <RecurringManager />
+                  <Transactions />
                 </ProtectedRoute>
               }
             />

@@ -32,8 +32,8 @@ export default function Register() {
       setLoading(true)
       await signUp(data.email, data.password)
       setSuccess(true)
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

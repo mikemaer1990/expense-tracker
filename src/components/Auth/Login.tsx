@@ -28,8 +28,8 @@ export default function Login() {
       setError('')
       setLoading(true)
       await signIn(data.email, data.password)
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

@@ -3,26 +3,17 @@
 ## 🎯 **High Priority**
 
 ### 1. 🔄 Manage Recurring Transactions UI
-**Status**: Pending
-**Description**: Add a dedicated interface for users to view and manage their recurring transaction templates
+**Status**: ✅ Complete
+**Description**: Added dedicated interface for users to view and manage recurring transaction templates
 
-**Problem**:
-- Users can only interact with recurring templates through generated instances
-- No way to view all active recurring transactions in one place
-- No way to pause/resume, edit, or delete a template directly
-- Orphaned templates can exist if all instances are deleted individually
-
-**Proposed Solutions**:
-1. **Dedicated "Recurring Transactions" page** - New route showing all templates with edit/delete/pause actions
-2. **Section in Settings** - List of active recurring templates with management options
-3. **Filter in History** - "Show recurring templates" toggle to view and manage them
-
-**Requirements**:
-- List all recurring templates (expenses and income)
-- Show frequency, amount, next generation date
-- Edit template directly (updates all future instances)
-- Delete template (removes template and all future instances)
-- Optional: Pause/resume functionality
+**Implemented**:
+- Combined History + Recurring into unified Transactions page with tabs
+- RecurringContent shows all templates with edit/delete/pause actions
+- Filter by All/Expenses/Income
+- Shows frequency, amount, next generation date
+- Edit template directly
+- Delete template (removes template and future instances)
+- Pause/resume functionality
 
 ---
 
@@ -100,7 +91,17 @@
 
 ## 📱 Mobile UX Improvements (Medium Priority)
 
-### 5. Quick Actions & Navigation
+### 5. Collapsible Filters on Mobile (Transactions Page)
+**Status**: Pending
+**Description**: Make filters collapsible on mobile to save vertical space
+- Add "Filters" toggle button (mobile only)
+- Collapse Year, Filter, Sort By, Order sections by default
+- Show badge when non-default filters are active
+- Keep filters always visible on desktop
+
+---
+
+### 6. Quick Actions & Navigation
 - Floating Action Button (FAB) for quick "Add Expense"
 - Expandable FAB to show "Add Income" option
 - Pull-to-refresh functionality on Dashboard and History

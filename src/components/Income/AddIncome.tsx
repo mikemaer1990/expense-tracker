@@ -98,8 +98,8 @@ export default function AddIncome({ onClose, onSuccess }: { onClose: () => void;
 
       onSuccess()
       onClose()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

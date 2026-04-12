@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { MagnifyingGlassIcon, BanknotesIcon, ChartBarIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, BanknotesIcon, ChartBarIcon, SparklesIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
@@ -53,6 +53,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<ExpenseForm>({
@@ -190,8 +191,8 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
 
       onSuccess()
       onClose()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -231,7 +232,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                       isSelected={isSelected}
                       onClick={() => {
                         setSelectedCategoryId(category.id)
-                        register('category_id').onChange({ target: { value: category.id, name: 'category_id' } })
+                        setValue('category_id', category.id)
                       }}
                       icon={<CategoryIcon className="h-6 w-6" />}
                       label={category.name}
@@ -264,9 +265,9 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
 
               {/* Icon Grid */}
               {!selectedCategoryId ? (
-                <div className="text-center py-12 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
-                  <SparklesIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm font-medium">Please select a category first</p>
+                <div className={`text-center py-12 rounded-xl border-2 border-dashed transition-colors ${errors.expense_type_id ? 'bg-red-50 border-red-300 text-red-500' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300 text-gray-500'}`}>
+                  <SparklesIcon className="h-8 w-8 mx-auto mb-2 opacity-60" />
+                  <p className="text-sm font-medium">{errors.expense_type_id ? 'Select a category and expense type to continue' : 'Please select a category first'}</p>
                 </div>
               ) : expenseTypes.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
@@ -286,7 +287,7 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                           key={type.id}
                           isSelected={isSelected}
                           onClick={() => {
-                            register('expense_type_id').onChange({ target: { value: type.id, name: 'expense_type_id' } })
+                            setValue('expense_type_id', type.id, { shouldValidate: true })
                           }}
                           icon={
                             <IconRenderer
@@ -303,8 +304,12 @@ export default function AddExpense({ onClose, onSuccess }: { onClose: () => void
                 </div>
               )}
 
+              <input type="hidden" {...register('expense_type_id', { required: 'Please select an expense type' })} />
               {errors.expense_type_id && (
-                <p className="mt-2 text-sm text-red-600">{errors.expense_type_id.message}</p>
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <ExclamationCircleIcon className="h-4 w-4 flex-shrink-0" />
+                  <span>{errors.expense_type_id.message}</span>
+                </div>
               )}
             </div>
           </div>

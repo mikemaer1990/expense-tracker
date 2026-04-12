@@ -1,0 +1,742 @@
+import { useState, useEffect, useCallback } from 'react'
+import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
+import { getYearStartDate, getYearEndDate, getAvailableYears } from '../../utils/date'
+import { formatCurrency } from '../../utils/currency'
+import { useUserPreferences } from '../../hooks/useUserPreferences'
+import EditExpense from '../Expenses/EditExpense'
+import EditIncome from '../Income/EditIncome'
+import IconRenderer from '../UI/IconRenderer'
+import Toast from '../UI/Toast'
+
+export default function HistoryContent() {
+  const { user } = useAuth()
+  const { preferences } = useUserPreferences()
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'expenses' | 'income'>('all')
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [editingTransaction, setEditingTransaction] = useState<any>(null)
+  const [editType, setEditType] = useState<'expense' | 'income' | null>(null)
+  const [expenseTypes, setExpenseTypes] = useState<any[]>([])
+  const [toast, setToast] = useState<{
+    show: boolean
+    message: string
+    type: 'success' | 'error' | 'info'
+    deletedTransaction?: any
+    deletedType?: 'expense' | 'income'
+  }>({ show: false, message: '', type: 'info' })
+  const [expandedNames, setExpandedNames] = useState<Set<string>>(new Set())
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [deleteModal, setDeleteModal] = useState<{
+    show: boolean
+    transaction: any
+    type: 'expense' | 'income'
+  } | null>(null)
+
+  const loadExpenseTypes = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expense_types')
+        .select(`
+          id,
+          name,
+          icon_name,
+          categories (
+            id,
+            name,
+            color
+          )
+        `)
+        .order('name')
+
+      if (error) {
+        console.error('Error loading expense types:', error)
+      } else {
+        setExpenseTypes(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading expense types:', error)
+    }
+  }, [])
+
+  const loadTransactions = useCallback(async () => {
+    if (!user) return
+
+    setLoading(true)
+    try {
+      let allTransactions = []
+
+      if (filter === 'all' || filter === 'expenses') {
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select(`
+            id,
+            amount,
+            description,
+            date,
+            created_at,
+            expense_type_id,
+            is_recurring,
+            recurring_template_id,
+            is_split,
+            original_amount,
+            split_with,
+            splitwise_expense_id,
+            expense_types (
+              id,
+              name,
+              icon_name,
+              categories (
+                name,
+                color
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .gte('date', getYearStartDate(selectedYear))
+          .lte('date', getYearEndDate(selectedYear))
+          .order('date', { ascending: sortOrder === 'asc' })
+          .order('created_at', { ascending: sortOrder === 'asc' })
+
+        if (expensesError) throw expensesError
+
+        const expenses = expensesData?.map((expense: any) => ({
+          ...expense,
+          type: 'expense',
+          category: expense.expense_types?.categories?.name || 'Unknown',
+          subcategory: expense.expense_types?.name || 'Unknown',
+          iconName: expense.expense_types?.icon_name || 'QuestionMarkCircleIcon'
+        })) || []
+
+        allTransactions.push(...expenses)
+      }
+
+      if (filter === 'all' || filter === 'income') {
+        const { data: incomeData, error: incomeError } = await supabase
+          .from('income')
+          .select('id, amount, description, date, created_at, source, is_recurring, recurring_template_id')
+          .eq('user_id', user.id)
+          .gte('date', getYearStartDate(selectedYear))
+          .lte('date', getYearEndDate(selectedYear))
+          .order('date', { ascending: sortOrder === 'asc' })
+          .order('created_at', { ascending: sortOrder === 'asc' })
+
+        if (incomeError) throw incomeError
+
+        const income = incomeData?.map(income => ({
+          ...income,
+          type: 'income',
+          category: income.is_recurring ? 'Recurring Income' : 'One-time Income',
+          subcategory: income.source,
+          iconName: 'CurrencyDollarIcon'
+        })) || []
+
+        allTransactions.push(...income)
+      }
+
+      // Sort by date or amount
+      if (sortBy === 'date') {
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.date).getTime()
+          const dateB = new Date(b.date).getTime()
+          return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
+        })
+      } else {
+        allTransactions.sort((a, b) => {
+          return sortOrder === 'asc' ? a.amount - b.amount : b.amount - a.amount
+        })
+      }
+
+      setTransactions(allTransactions)
+
+      // Extract available years from all transactions
+      const { data: allExpensesForYears } = await supabase
+        .from('expenses')
+        .select('date')
+        .eq('user_id', user.id)
+
+      const { data: allIncomeForYears } = await supabase
+        .from('income')
+        .select('date')
+        .eq('user_id', user.id)
+
+      const allDates = [
+        ...(allExpensesForYears?.map(e => e.date) || []),
+        ...(allIncomeForYears?.map(i => i.date) || [])
+      ]
+
+      setAvailableYears(getAvailableYears(allDates))
+    } catch (error) {
+      console.error('Error loading transactions:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user, filter, sortBy, sortOrder, selectedYear])
+
+  useEffect(() => {
+    if (user) {
+      loadExpenseTypes()
+      loadTransactions()
+    }
+  }, [user, loadExpenseTypes, loadTransactions])
+
+  // Auto-select most recent year if current year has no data
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0])
+    }
+  }, [availableYears, selectedYear])
+
+  const handleEdit = (transaction: any) => {
+    setEditingTransaction(transaction)
+    setEditType(transaction.type)
+  }
+
+  const handleEditClose = () => {
+    setEditingTransaction(null)
+    setEditType(null)
+  }
+
+  const handleEditSuccess = () => {
+    setToast({
+      show: true,
+      message: `${editType === 'expense' ? 'Expense' : 'Income'} updated successfully`,
+      type: 'success'
+    })
+    loadTransactions()
+  }
+
+  const handleDelete = async (id: string, type: 'expense' | 'income') => {
+    const transaction = transactions.find(t => t.id === id && t.type === type)
+
+    if (transaction?.recurring_template_id) {
+      setDeleteModal({ show: true, transaction, type })
+      return
+    }
+
+    await performDelete(id, type, transaction, 'single')
+  }
+
+  const performDelete = async (id: string, type: 'expense' | 'income', transactionToDelete: any, mode: 'single' | 'all') => {
+    try {
+      if (mode === 'all' && transactionToDelete?.recurring_template_id) {
+        const { error } = await supabase
+          .from('recurring_templates')
+          .delete()
+          .eq('id', transactionToDelete.recurring_template_id)
+
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from(type === 'expense' ? 'expenses' : 'income')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+      }
+
+      setToast({
+        show: true,
+        message: mode === 'all' ?
+          `All recurring ${type === 'expense' ? 'expenses' : 'income'} deleted` :
+          `${type === 'expense' ? 'Expense' : 'Income'} deleted`,
+        type: 'success',
+        deletedTransaction: transactionToDelete,
+        deletedType: type
+      })
+
+      loadTransactions()
+    } catch (error) {
+      console.error('Error deleting transaction:', error)
+      setToast({
+        show: true,
+        message: 'Failed to delete transaction',
+        type: 'error'
+      })
+    }
+  }
+
+  const handleUndo = async () => {
+    if (!toast.deletedTransaction || !toast.deletedType) return
+
+    try {
+      const transaction = toast.deletedTransaction
+
+      if (toast.deletedType === 'expense') {
+        const { error } = await supabase.from('expenses').insert({
+          user_id: user!.id,
+          expense_type_id: transaction.expense_type_id,
+          amount: transaction.amount,
+          date: transaction.date,
+          description: transaction.description,
+          is_split: transaction.is_split,
+          original_amount: transaction.original_amount,
+          split_with: transaction.split_with,
+          recurring_template_id: transaction.recurring_template_id,
+          is_generated: transaction.is_generated,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('income').insert({
+          user_id: user!.id,
+          source: transaction.source,
+          amount: transaction.amount,
+          date: transaction.date,
+          description: transaction.description,
+          is_recurring: transaction.is_recurring,
+          recurring_template_id: transaction.recurring_template_id,
+          is_generated: transaction.is_generated,
+        })
+        if (error) throw error
+      }
+
+      setToast({
+        show: true,
+        message: `${toast.deletedType === 'expense' ? 'Expense' : 'Income'} restored`,
+        type: 'info'
+      })
+
+      loadTransactions()
+    } catch (error) {
+      console.error('Error restoring transaction:', error)
+      setToast({
+        show: true,
+        message: 'Failed to restore transaction',
+        type: 'error'
+      })
+    }
+  }
+
+  const handleCloseToast = () => {
+    setToast({ show: false, message: '', type: 'info' })
+  }
+
+  const toggleExpenseName = (transactionId: string) => {
+    setExpandedNames(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(transactionId)) {
+        newSet.delete(transactionId)
+      } else {
+        newSet.add(transactionId)
+      }
+      return newSet
+    })
+  }
+
+  return (
+    <>
+      {/* Modern Filters and Sorting */}
+      <div className="bg-white shadow rounded-lg mb-6 p-4">
+        {/* Year Filter - First and most prominent */}
+        {availableYears.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Year</h3>
+            <div className="inline-flex bg-gray-100 rounded-md p-1">
+              {availableYears.map(year => (
+                <button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
+                    selectedYear === year
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                  }`}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Filter Pills */}
+        <div className="mb-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Filter Transactions</h3>
+          <div className="flex flex-wrap gap-2 overflow-x-auto">
+            {[
+              { value: 'all', label: 'All', count: transactions.length },
+              { value: 'expenses', label: 'Expenses', count: transactions.filter(t => t.type === 'expense').length },
+              { value: 'income', label: 'Income', count: transactions.filter(t => t.type === 'income').length }
+            ].map((filterOption) => (
+              <button
+                key={filterOption.value}
+                onClick={() => setFilter(filterOption.value as 'all' | 'expenses' | 'income')}
+                className={`flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                  filter === filterOption.value
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+                }`}
+              >
+                {filterOption.label}
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  filter === filterOption.value
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {filterOption.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Sort By</h3>
+            <div className="inline-flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSortBy('date')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                  sortBy === 'date'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Date
+              </button>
+              <button
+                onClick={() => setSortBy('amount')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                  sortBy === 'amount'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Amount
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Order</h3>
+            <div className="inline-flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSortOrder('desc')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                  sortOrder === 'desc'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {sortBy === 'date' ? 'Newest First' : 'Highest First'}
+              </button>
+              <button
+                onClick={() => setSortOrder('asc')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                  sortOrder === 'asc'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {sortBy === 'date' ? 'Oldest First' : 'Lowest First'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Transactions List */}
+      <div className="bg-white shadow rounded-lg">
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading transactions...</div>
+        ) : transactions.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No transactions found. Start by adding some expenses or income!
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-hidden rounded-lg">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Transaction
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.map((transaction) => (
+                    <tr key={`${transaction.type}-${transaction.id}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="mr-3">
+                            <IconRenderer
+                              iconName={transaction.iconName}
+                              size="md"
+                              className="text-gray-600"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                              <span>{transaction.subcategory || 'Unknown'}</span>
+                              {transaction.is_recurring && (
+                                <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full inline-flex items-center gap-1">
+                                  🔄 Recurring
+                                </span>
+                              )}
+                              {transaction.is_split && (
+                                <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full inline-flex items-center gap-1">
+                                  👥 Split
+                                </span>
+                              )}
+                              {transaction.splitwise_expense_id && (
+                                <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full inline-flex items-center gap-1">
+                                  <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
+                                  <span>Splitwise</span>
+                                </span>
+                              )}
+                            </div>
+                            {transaction.description && (
+                              <div className="text-sm text-gray-500">{transaction.description}</div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          {transaction.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(transaction.date + 'T00:00:00').toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`font-semibold ${
+                          transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
+                        }`}>
+                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, preferences.currency)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(transaction)}
+                          className="text-blue-600 hover:text-blue-900 p-1 cursor-pointer"
+                          title="Edit transaction"
+                        >
+                          <DocumentTextIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(transaction.id, transaction.type)}
+                          className="text-red-600 hover:text-red-900 ml-3 p-1 cursor-pointer"
+                          title="Delete transaction"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="block lg:hidden">
+              <div className="space-y-4 p-4 overflow-hidden">
+                {transactions.map((transaction) => (
+                  <div key={`${transaction.type}-${transaction.id}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md active:shadow-sm active:scale-[0.98] transition-all duration-200 min-w-0">
+                    {/* Top Row: Icon + Name + Amount */}
+                    <div className="bg-blue-50/30 px-4 py-3 border-b border-gray-100">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <IconRenderer
+                            iconName={transaction.iconName}
+                            size="md"
+                            className="text-gray-600 flex-shrink-0"
+                          />
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span
+                              className={`font-medium text-gray-900 cursor-pointer ${
+                                expandedNames.has(`${transaction.type}-${transaction.id}`)
+                                  ? 'whitespace-normal break-words'
+                                  : 'truncate'
+                              }`}
+                              onClick={() => toggleExpenseName(`${transaction.type}-${transaction.id}`)}
+                            >
+                              {transaction.subcategory || 'Unknown'}
+                              {!expandedNames.has(`${transaction.type}-${transaction.id}`) &&
+                               (transaction.subcategory || 'Unknown').length > 20 && (
+                                <span className="text-blue-500 ml-1 text-sm">⋯</span>
+                              )}
+                            </span>
+                            {transaction.is_recurring && (
+                              <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full flex-shrink-0 inline-flex items-center">
+                                🔄
+                              </span>
+                            )}
+                            {transaction.is_split && (
+                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full flex-shrink-0 inline-flex items-center">
+                                👥
+                              </span>
+                            )}
+                            {transaction.splitwise_expense_id && (
+                              <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full flex-shrink-0 inline-flex items-center">
+                                <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className={`text-lg font-semibold flex-shrink-0 ${
+                          transaction.type === 'income' ? 'text-green-600' : 'text-orange-600'
+                        }`}>
+                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, preferences.currency)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Middle Section: Category + Date + Description */}
+                    <div className="px-4 py-3">
+                      {/* Second Row: Category + Date */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-800">
+                          {transaction.category}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(transaction.date + 'T00:00:00').toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      {/* Third Row: Description (if exists) */}
+                      {transaction.description && (
+                        <div>
+                          <p className="text-sm text-gray-600 pl-1">
+                            {transaction.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Action Buttons */}
+                    <div className="bg-gray-50 border-t border-gray-100">
+                      <div className="flex">
+                        {/* Edit Button Section */}
+                        <div className="flex-1 flex items-center justify-center py-2 border-r border-gray-200">
+                          <button
+                            onClick={() => handleEdit(transaction)}
+                            className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-700 active:text-blue-800 px-4 py-3 rounded-md hover:bg-blue-100 active:bg-blue-200 cursor-pointer transition-all duration-150 min-h-[44px] min-w-[44px]"
+                            title="Edit transaction"
+                          >
+                            <DocumentTextIcon className="h-6 w-6" />
+                            <span className="text-sm font-medium">Edit</span>
+                          </button>
+                        </div>
+
+                        {/* Delete Button Section */}
+                        <div className="flex-1 flex items-center justify-center py-2">
+                          <button
+                            onClick={() => handleDelete(transaction.id, transaction.type)}
+                            className="flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 active:text-red-800 px-4 py-3 rounded-md hover:bg-red-100 active:bg-red-200 cursor-pointer transition-all duration-150 min-h-[44px] min-w-[44px]"
+                            title="Delete transaction"
+                          >
+                            <TrashIcon className="h-6 w-6" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Edit Modals */}
+      {editingTransaction && editType === 'expense' && (
+        <EditExpense
+          expense={editingTransaction}
+          expenseTypes={expenseTypes}
+          onClose={handleEditClose}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {editingTransaction && editType === 'income' && (
+        <EditIncome
+          income={editingTransaction}
+          onClose={handleEditClose}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Modal for Recurring Transactions */}
+      {deleteModal?.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Delete Recurring {deleteModal.type === 'expense' ? 'Expense' : 'Income'}
+            </h3>
+
+            <p className="text-gray-700">
+              This is a recurring transaction. What would you like to delete?
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  await performDelete(deleteModal.transaction.id, deleteModal.type, deleteModal.transaction, 'single')
+                  setDeleteModal(null)
+                }}
+                className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <div className="font-semibold text-gray-900">Delete only this one</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Removes only this transaction
+                </div>
+              </button>
+
+              <button
+                onClick={async () => {
+                  await performDelete(deleteModal.transaction.id, deleteModal.type, deleteModal.transaction, 'all')
+                  setDeleteModal(null)
+                }}
+                className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <div className="font-semibold text-gray-900">Delete all recurring instances</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Deletes the template and all linked transactions
+                </div>
+              </button>
+
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="w-full p-3 text-center border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={handleCloseToast}
+          onUndo={toast.deletedTransaction ? handleUndo : undefined}
+          showUndo={!!toast.deletedTransaction && toast.type === 'success'}
+        />
+      )}
+    </>
+  )
+}
