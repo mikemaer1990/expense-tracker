@@ -137,7 +137,7 @@
 ### 11. Income Tracking Improvements
 **Description**: Enhanced income management system
 - Income categories (Salary, Freelance, Investments, etc.)
-- Better recurring income support
+- Flexible recurring income schedules (e.g. semi-monthly: 15th & last day of month — current system only supports fixed intervals like weekly/biweekly/monthly)
 - Enhanced income vs expenses analytics
 
 ---
@@ -186,5 +186,5 @@
 
 ---
 
-**Last Updated**: April 12, 2026
+**Last Updated**: May 2, 2026
 **Project Status**: Production-ready, deployed on Vercel
