@@ -3,12 +3,16 @@ import { ChartBarIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../context/AuthContext'
 import { useUserPreferences } from '../../hooks/useUserPreferences'
 import { supabase } from '../../lib/supabase'
-import { formatCurrency } from '../../utils/currency'
 import CategoryBreakdown from './CategoryBreakdown'
 import DataGrid from './DataGrid'
 import PieChart from './PieChart'
 import LineChart from './LineChart'
 import BarChart from './BarChart'
+import KPICard from './KPICard'
+import InsightsBanner from './InsightsBanner'
+import TopSpenders from './TopSpenders'
+import FixedVsVariable from './FixedVsVariable'
+import SavingsRateBar from './SavingsRateBar'
 import Navigation from '../UI/Navigation'
 
 interface CategoryData {
@@ -24,6 +28,7 @@ interface ExpenseTypeData {
   id: string
   name: string
   totalAmount: number
+  recurringAmount: number
   monthlyData: { [month: string]: number }
   transactionCount: number
 }
@@ -42,14 +47,18 @@ export default function Analytics() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [totalIncome, setTotalIncome] = useState(0)
   const [totalExpenses, setTotalExpenses] = useState(0)
+  const [priorIncome, setPriorIncome] = useState(0)
+  const [priorExpenses, setPriorExpenses] = useState(0)
   const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [monthlyIncomeData, setMonthlyIncomeData] = useState<{ [month: string]: number }>({})
+  const [monthlyExpenseSparkline, setMonthlyExpenseSparkline] = useState<number[]>([])
 
   const loadAnalyticsData = useCallback(async () => {
     if (!user) return
 
     setLoading(true)
     try {
-      // Get categories with their expense types and expenses
+      // Get categories with their expense types and expenses (including is_recurring)
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select(`
@@ -61,7 +70,8 @@ export default function Analytics() {
             name,
             expenses (
               amount,
-              date
+              date,
+              is_recurring
             )
           )
         `)
@@ -69,105 +79,124 @@ export default function Analytics() {
 
       if (categoriesError) throw categoriesError
 
-      // Get income for the selected period
-      let incomeQuery = supabase
+      // Build date ranges for selected and prior periods
+      let startDate: string, endDate: string
+      let priorStartDate: string, priorEndDate: string
+
+      if (timePeriod === 'monthly') {
+        startDate = new Date(selectedYear, selectedMonth, 1).toISOString().split('T')[0]
+        endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0]
+        // Prior = previous month (handle January → December of prior year)
+        const priorMonth = selectedMonth === 0 ? 11 : selectedMonth - 1
+        const priorYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear
+        priorStartDate = new Date(priorYear, priorMonth, 1).toISOString().split('T')[0]
+        priorEndDate = new Date(priorYear, priorMonth + 1, 0).toISOString().split('T')[0]
+      } else {
+        startDate = `${selectedYear}-01-01`
+        endDate = `${selectedYear}-12-31`
+        priorStartDate = `${selectedYear - 1}-01-01`
+        priorEndDate = `${selectedYear - 1}-12-31`
+      }
+
+      // Fetch income for selected period
+      const { data: incomeData, error: incomeError } = await supabase
         .from('income')
         .select('amount, date')
         .eq('user_id', user.id)
-
-      if (timePeriod === 'monthly') {
-        const startDate = new Date(selectedYear, selectedMonth, 1).toISOString().split('T')[0]
-        const endDate = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0]
-        incomeQuery = incomeQuery.gte('date', startDate).lte('date', endDate)
-      } else {
-        const startDate = `${selectedYear}-01-01`
-        const endDate = `${selectedYear}-12-31`
-        incomeQuery = incomeQuery.gte('date', startDate).lte('date', endDate)
-      }
-
-      const { data: incomeData, error: incomeError } = await incomeQuery
+        .gte('date', startDate)
+        .lte('date', endDate)
 
       if (incomeError) throw incomeError
 
-      const totalIncome = incomeData?.reduce((sum, income) => sum + income.amount, 0) || 0
-      setTotalIncome(totalIncome)
+      const periodIncome = incomeData?.reduce((sum, i) => sum + i.amount, 0) || 0
+      setTotalIncome(periodIncome)
+
+      // Compute monthly income breakdown (for BarChart income overlay in yearly mode)
+      const incomeByMonth: { [month: string]: number } = {}
+      incomeData?.forEach(income => {
+        const year = parseInt(income.date.split('-')[0], 10)
+        const month = parseInt(income.date.split('-')[1], 10) - 1
+        const monthKey = new Date(year, month).toLocaleString('default', { month: 'short' })
+        incomeByMonth[monthKey] = (incomeByMonth[monthKey] || 0) + income.amount
+      })
+      setMonthlyIncomeData(incomeByMonth)
+
+      // Fetch prior period income
+      const { data: priorIncomeData } = await supabase
+        .from('income')
+        .select('amount')
+        .eq('user_id', user.id)
+        .gte('date', priorStartDate)
+        .lte('date', priorEndDate)
+      setPriorIncome(priorIncomeData?.reduce((sum, i) => sum + i.amount, 0) || 0)
+
+      // Fetch prior period expenses (flat query for performance)
+      const { data: priorExpData } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('user_id', user.id)
+        .gte('date', priorStartDate)
+        .lte('date', priorEndDate)
+      setPriorExpenses(priorExpData?.reduce((sum, e) => sum + e.amount, 0) || 0)
 
       // Extract available years from all user data
       const yearsSet = new Set<number>()
-      
-      // Add years from expense data
+
       categoriesData?.forEach(category => {
         category.expense_types.forEach(expenseType => {
           expenseType.expenses.forEach(expense => {
-            // Extract year directly from YYYY-MM-DD string to avoid timezone issues
             const expenseYear = parseInt(expense.date.split('-')[0], 10)
-            if (!isNaN(expenseYear)) {
-              yearsSet.add(expenseYear)
-            }
+            if (!isNaN(expenseYear)) yearsSet.add(expenseYear)
           })
         })
       })
-      
-      // Get all income data (not just selected period) for year extraction
+
       const { data: allIncomeData, error: allIncomeError } = await supabase
         .from('income')
         .select('date')
         .eq('user_id', user.id)
-      
+
       if (!allIncomeError && allIncomeData) {
         allIncomeData.forEach(income => {
-          // Extract year directly from YYYY-MM-DD string to avoid timezone issues
           const incomeYear = parseInt(income.date.split('-')[0], 10)
-          if (!isNaN(incomeYear)) {
-            yearsSet.add(incomeYear)
-          }
+          if (!isNaN(incomeYear)) yearsSet.add(incomeYear)
         })
       }
-      
-      // Convert to sorted array (newest first)
+
       const availableYearsList = Array.from(yearsSet).sort((a, b) => b - a)
-      
-      // If no data exists, show current year
-      const finalAvailableYears = availableYearsList.length > 0 
-        ? availableYearsList 
-        : [new Date().getFullYear()]
-      
+      const finalAvailableYears = availableYearsList.length > 0 ? availableYearsList : [new Date().getFullYear()]
       setAvailableYears(finalAvailableYears)
 
-      // Process categories data
+      // Process categories
       const processedCategories: CategoryData[] = categoriesData?.map(category => {
         const expenseTypes: ExpenseTypeData[] = category.expense_types.map(expenseType => {
           const monthlyData: { [month: string]: number } = {}
           let totalAmount = 0
+          let recurringAmount = 0
           let transactionCount = 0
 
           expenseType.expenses.forEach(expense => {
-            // Extract year and month directly from YYYY-MM-DD string to avoid timezone issues
             const expenseYear = parseInt(expense.date.split('-')[0], 10)
-            const expenseMonth = parseInt(expense.date.split('-')[1], 10) - 1 // Month is 0-indexed
+            const expenseMonth = parseInt(expense.date.split('-')[1], 10) - 1
 
             if (timePeriod === 'monthly') {
               if (expenseYear === selectedYear && expenseMonth === selectedMonth) {
                 totalAmount += expense.amount
                 transactionCount++
+                if (expense.is_recurring) recurringAmount += expense.amount
               }
             } else {
               if (expenseYear === selectedYear) {
                 totalAmount += expense.amount
                 transactionCount++
+                if (expense.is_recurring) recurringAmount += expense.amount
                 const monthKey = new Date(expenseYear, expenseMonth).toLocaleString('default', { month: 'short' })
                 monthlyData[monthKey] = (monthlyData[monthKey] || 0) + expense.amount
               }
             }
           })
 
-          return {
-            id: expenseType.id,
-            name: expenseType.name,
-            totalAmount,
-            monthlyData,
-            transactionCount
-          }
+          return { id: expenseType.id, name: expenseType.name, totalAmount, recurringAmount, monthlyData, transactionCount }
         })
 
         const categoryTotal = expenseTypes.reduce((sum, et) => sum + et.totalAmount, 0)
@@ -178,19 +207,29 @@ export default function Analytics() {
           color: category.color,
           totalAmount: categoryTotal,
           expenseTypes,
-          percentage: 0 // Will be calculated after we have total expenses
+          percentage: 0
         }
       }) || []
 
-      const totalExpenses = processedCategories.reduce((sum, cat) => sum + cat.totalAmount, 0)
-      
-      // Calculate percentages
-      processedCategories.forEach(category => {
-        category.percentage = totalExpenses > 0 ? (category.totalAmount / totalExpenses) * 100 : 0
+      const totalExp = processedCategories.reduce((sum, cat) => sum + cat.totalAmount, 0)
+      processedCategories.forEach(cat => {
+        cat.percentage = totalExp > 0 ? (cat.totalAmount / totalExp) * 100 : 0
       })
 
       setCategories(processedCategories)
-      setTotalExpenses(totalExpenses)
+      setTotalExpenses(totalExp)
+
+      // Compute monthly expense sparkline for yearly view (all 12 months)
+      if (timePeriod === 'yearly') {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const sparkline = months.map(m =>
+          processedCategories.reduce((sum, cat) =>
+            sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[m] || 0), 0), 0)
+        )
+        setMonthlyExpenseSparkline(sparkline)
+      } else {
+        setMonthlyExpenseSparkline([])
+      }
 
     } catch (error) {
       console.error('Error loading analytics data:', error)
@@ -200,24 +239,44 @@ export default function Analytics() {
   }, [user, timePeriod, selectedYear, selectedMonth])
 
   useEffect(() => {
-    if (user) {
-      loadAnalyticsData()
-    }
+    if (user) loadAnalyticsData()
   }, [user, loadAnalyticsData])
 
-  // Auto-select most recent available year when available years change
   useEffect(() => {
     if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
-      setSelectedYear(availableYears[0]) // First item is most recent due to sorting
+      setSelectedYear(availableYears[0])
     }
   }, [availableYears, selectedYear])
 
   const surplus = totalIncome - totalExpenses
-  const currentPeriodLabel = timePeriod === 'monthly' 
+  const savingsRate = totalIncome > 0 ? (surplus / totalIncome) * 100 : 0
+
+  const recurringTotal = categories.reduce((sum, cat) =>
+    sum + cat.expenseTypes.reduce((etSum, et) => etSum + et.recurringAmount, 0), 0)
+
+  const topSpenders = categories
+    .flatMap(cat => cat.expenseTypes.map(et => ({
+      id: et.id,
+      name: et.name,
+      categoryName: cat.name,
+      categoryColor: cat.color,
+      totalAmount: et.totalAmount,
+      transactionCount: et.transactionCount,
+    })))
+    .filter(et => et.totalAmount > 0)
+    .sort((a, b) => b.totalAmount - a.totalAmount)
+
+  const topCategory = categories
+    .filter(c => c.totalAmount > 0)
+    .sort((a, b) => b.totalAmount - a.totalAmount)[0] || null
+
+  const currentPeriodLabel = timePeriod === 'monthly'
     ? new Date(selectedYear, selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })
     : selectedYear.toString()
 
-  // Transform data for DataGrid component
+  // Insight reset key — banner resets when period changes
+  const insightKey = `${timePeriod}-${selectedYear}-${selectedMonth}`
+
   const gridData = categories.map(category => ({
     id: category.id,
     name: category.name,
@@ -246,6 +305,8 @@ export default function Analytics() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
+
+          {/* Page Header */}
           <div className="mb-6">
             <div className="flex items-center space-x-2 mb-2">
               <ChartBarIcon className="h-6 w-6 text-blue-600" />
@@ -255,7 +316,7 @@ export default function Analytics() {
           </div>
 
           {/* Controls */}
-          <div className="bg-white shadow rounded-lg mb-6 p-4">
+          <div className="bg-white shadow-sm rounded-xl border border-gray-100 mb-6 p-4">
             <div className="flex flex-wrap gap-4 items-center justify-between">
               <div className="flex flex-wrap gap-4 items-center">
                 <div>
@@ -264,9 +325,7 @@ export default function Analytics() {
                     <button
                       onClick={() => setTimePeriod('monthly')}
                       className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
-                        timePeriod === 'monthly' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                        timePeriod === 'monthly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
                       }`}
                     >
                       Monthly
@@ -274,16 +333,14 @@ export default function Analytics() {
                     <button
                       onClick={() => setTimePeriod('yearly')}
                       className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
-                        timePeriod === 'yearly' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                        timePeriod === 'yearly' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
                       }`}
                     >
                       Yearly
                     </button>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
                   <div className="flex bg-gray-100 rounded-md p-1">
@@ -292,9 +349,7 @@ export default function Analytics() {
                         key={year}
                         onClick={() => setSelectedYear(year)}
                         className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 cursor-pointer ${
-                          selectedYear === year 
-                            ? 'bg-white text-gray-900 shadow-sm' 
-                            : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                          selectedYear === year ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
                         }`}
                       >
                         {year}
@@ -312,9 +367,7 @@ export default function Analytics() {
                           key={i}
                           onClick={() => setSelectedMonth(i)}
                           className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 cursor-pointer ${
-                            selectedMonth === i 
-                              ? 'bg-white text-gray-900 shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
+                            selectedMonth === i ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900'
                           }`}
                           title={new Date(selectedYear, i).toLocaleString('default', { month: 'long' })}
                         >
@@ -332,9 +385,7 @@ export default function Analytics() {
                   <button
                     onClick={() => setViewMode('breakdown')}
                     className={`px-3 py-1 text-sm font-medium rounded transition-colors duration-200 cursor-pointer ${
-                      viewMode === 'breakdown' 
-                        ? 'bg-white text-gray-900 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
+                      viewMode === 'breakdown' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Charts
@@ -342,9 +393,7 @@ export default function Analytics() {
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`px-3 py-1 text-sm font-medium rounded transition-colors duration-200 cursor-pointer ${
-                      viewMode === 'grid' 
-                        ? 'bg-white text-gray-900 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
+                      viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Data
@@ -354,90 +403,57 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* Financial Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-600 rounded-md flex items-center justify-center">
-                      <span className="text-white font-semibold">+</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Income ({currentPeriodLabel})
-                      </dt>
-                      <dd className="text-lg font-medium text-green-600">
-                        {formatCurrency(totalIncome, preferences.currency)}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-orange-600 rounded-md flex items-center justify-center">
-                      <span className="text-white font-semibold">-</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Expenses ({currentPeriodLabel})
-                      </dt>
-                      <dd className="text-lg font-medium text-orange-600">
-                        {formatCurrency(totalExpenses, preferences.currency)}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-                      surplus >= 0 ? 'bg-green-600' : 'bg-red-600'
-                    }`}>
-                      <span className="text-white font-semibold">=</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        {surplus >= 0 ? 'Surplus' : 'Deficit'} ({currentPeriodLabel})
-                      </dt>
-                      <dd className={`text-lg font-medium ${
-                        surplus >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {formatCurrency(Math.abs(surplus), preferences.currency)}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* KPI Hero Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <KPICard
+              label="Income"
+              value={totalIncome}
+              currency={preferences.currency}
+              priorValue={priorIncome}
+              sentiment="income"
+              sparklineData={timePeriod === 'yearly' ? Object.values(monthlyIncomeData) : undefined}
+            />
+            <KPICard
+              label="Expenses"
+              value={totalExpenses}
+              currency={preferences.currency}
+              priorValue={priorExpenses}
+              sentiment="expense"
+              sparklineData={timePeriod === 'yearly' ? monthlyExpenseSparkline : undefined}
+            />
+            <KPICard
+              label={surplus >= 0 ? 'Surplus' : 'Deficit'}
+              value={Math.abs(surplus)}
+              currency={preferences.currency}
+              priorValue={Math.abs(priorIncome - priorExpenses)}
+              sentiment={surplus >= 0 ? 'surplus' : 'deficit'}
+            />
           </div>
+
+          {/* Insights Banner — resets on period change */}
+          <InsightsBanner
+            key={insightKey}
+            totalExpenses={totalExpenses}
+            priorExpenses={priorExpenses}
+            totalIncome={totalIncome}
+            topCategory={topCategory ? { name: topCategory.name, percentage: topCategory.percentage } : null}
+            recurringTotal={recurringTotal}
+            savingsRate={savingsRate}
+            timePeriod={timePeriod}
+            currency={preferences.currency}
+          />
 
           {/* Main Content */}
           {loading ? (
-            <div className="bg-white shadow rounded-lg p-8">
+            <div className="bg-white shadow-sm rounded-xl border border-gray-100 p-8">
               <div className="text-center text-gray-500">Loading analytics data...</div>
             </div>
           ) : viewMode === 'breakdown' ? (
             <div className="space-y-6">
-              {/* Charts View */}
+
+              {/* Row 1: Donut + Bar chart */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Pie Chart - Category Distribution */}
-                <PieChart 
+                <PieChart
                   categories={categories.map(cat => ({
                     id: cat.id,
                     name: cat.name,
@@ -445,62 +461,80 @@ export default function Analytics() {
                     totalAmount: cat.totalAmount,
                     percentage: cat.percentage
                   }))}
-                  onCategoryClick={(categoryId) => {
-                    // Future: Show detailed breakdown for selected category
-                    void categoryId // Suppress unused warning
-                  }}
+                  currency={preferences.currency}
+                  onCategoryClick={(categoryId) => void categoryId}
                 />
-                
-                {/* Bar Chart - Monthly Comparison */}
+
                 {timePeriod === 'yearly' && (
                   <BarChart
                     currency={preferences.currency}
+                    showIncome={true}
                     data={Array.from({ length: 12 }, (_, i) => {
                       const monthKey = new Date(selectedYear, i).toLocaleString('default', { month: 'short' })
-                      const monthTotal = categories.reduce((sum, cat) => 
-                        sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] || 0), 0), 0
-                      )
-                      const expenseCount = categories.reduce((sum, cat) => 
-                        sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] ? 1 : 0), 0), 0
-                      )
+                      const monthTotal = categories.reduce((sum, cat) =>
+                        sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] || 0), 0), 0)
+                      const expenseCount = categories.reduce((sum, cat) =>
+                        sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] ? 1 : 0), 0), 0)
                       return {
                         month: `${selectedYear}-${String(i + 1).padStart(2, '0')}`,
                         expenses: monthTotal,
-                        expenseCount: expenseCount
+                        income: monthlyIncomeData[monthKey] || 0,
+                        expenseCount,
                       }
                     })}
-                    onBarClick={(monthData) => {
-                      // Future: Show detailed breakdown for selected month
-                      void monthData // Suppress unused warning
-                    }}
+                    onBarClick={(monthData) => void monthData}
                   />
                 )}
               </div>
-              
-              {/* Line Chart - Spending Trends */}
+
+              {/* Row 2: Savings Rate Bar */}
+              <SavingsRateBar
+                income={totalIncome}
+                expenses={totalExpenses}
+                currency={preferences.currency}
+              />
+
+              {/* Row 3: Top Spenders + Fixed vs Variable */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div className="md:col-span-5">
+                  <TopSpenders
+                    items={topSpenders}
+                    totalExpenses={totalExpenses}
+                    currency={preferences.currency}
+                  />
+                </div>
+                <div className="md:col-span-7">
+                  <FixedVsVariable
+                    fixedTotal={recurringTotal}
+                    variableTotal={totalExpenses - recurringTotal}
+                    totalExpenses={totalExpenses}
+                    currency={preferences.currency}
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Line Chart (yearly only) */}
               {timePeriod === 'yearly' && (
                 <LineChart
                   currency={preferences.currency}
                   data={Array.from({ length: 12 }, (_, i) => {
-                    const monthKey = new Date(2024, i).toLocaleString('default', { month: 'short' })
-                    const monthTotal = categories.reduce((sum, cat) => 
-                      sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] || 0), 0), 0
-                    )
-                    const expenseCount = categories.reduce((sum, cat) => 
-                      sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] ? 1 : 0), 0), 0
-                    )
+                    const monthKey = new Date(selectedYear, i).toLocaleString('default', { month: 'short' })
+                    const monthTotal = categories.reduce((sum, cat) =>
+                      sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] || 0), 0), 0)
+                    const expenseCount = categories.reduce((sum, cat) =>
+                      sum + cat.expenseTypes.reduce((etSum, et) => etSum + (et.monthlyData[monthKey] ? 1 : 0), 0), 0)
                     return {
-                      date: `${selectedYear}-${String(i + 1).padStart(2, '0')}-15`, // Mid-month date
+                      date: `${selectedYear}-${String(i + 1).padStart(2, '0')}-15`,
                       amount: monthTotal,
-                      expenseCount: expenseCount
+                      expenseCount,
                     }
                   })}
                   timeframe="year"
                 />
               )}
-              
-              {/* Original Category Breakdown - Still available below charts */}
-              <CategoryBreakdown 
+
+              {/* Row 5: Category Breakdown */}
+              <CategoryBreakdown
                 categories={categories}
                 timePeriod={timePeriod}
                 currentPeriodLabel={currentPeriodLabel}
@@ -509,16 +543,14 @@ export default function Analytics() {
             </div>
           ) : (
             timePeriod === 'yearly' ? (
-              <DataGrid 
+              <DataGrid
                 data={gridData}
                 selectedYear={selectedYear}
                 currency={preferences.currency}
-                onExportCSV={() => {
-                  // CSV export functionality placeholder
-                }}
+                onExportCSV={() => {}}
               />
             ) : (
-              <div className="bg-white shadow rounded-lg p-8">
+              <div className="bg-white shadow-sm rounded-xl border border-gray-100 p-8">
                 <div className="text-center text-gray-500">
                   Data view is only available for yearly data. Please switch to yearly view to see the spreadsheet-style breakdown.
                 </div>

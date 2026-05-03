@@ -69,16 +69,18 @@ export default function CategoryBreakdown({
         const hasExpenseTypes = category.expenseTypes.length > 0
 
         return (
-          <div key={category.id} className="bg-white shadow rounded-lg overflow-hidden">
+          <div key={category.id} className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+            {/* Category color accent strip */}
+            <div className="h-1" style={{ background: `linear-gradient(to right, ${category.color}, ${category.color}44)` }} />
             {/* Category Header */}
-            <div 
-              className={`px-6 py-4 border-b border-gray-200 ${hasExpenseTypes ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+            <div
+              className={`px-6 py-4 border-b border-gray-100 ${hasExpenseTypes ? 'cursor-pointer hover:bg-gray-50 transition-colors duration-150' : ''}`}
               onClick={hasExpenseTypes ? () => toggleCategory(category.id) : undefined}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
                   {hasExpenseTypes && (
-                    <div className="text-gray-400">
+                    <div className="text-gray-400 flex-shrink-0">
                       {isExpanded ? (
                         <ChevronDownIcon className="h-5 w-5" />
                       ) : (
@@ -86,25 +88,41 @@ export default function CategoryBreakdown({
                       )}
                     </div>
                   )}
-                  <div 
+                  <div
                     className="w-4 h-4 rounded-full flex-shrink-0"
                     style={{ backgroundColor: category.color }}
                   />
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">{category.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {category.percentage.toFixed(1)}% of total expenses • {currentPeriodLabel}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-semibold text-gray-900">{category.name}</h3>
+                      {category.totalAmount > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 flex-shrink-0">
+                          {category.expenseTypes.reduce((sum, et) => sum + et.transactionCount, 0)} transactions
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      {category.percentage.toFixed(1)}% of total • {currentPeriodLabel}
                     </p>
+                    {/* Progress bar */}
+                    {category.totalAmount > 0 && (
+                      <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden w-full max-w-xs">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(category.percentage, 100)}%`, backgroundColor: category.color }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <div className="text-xl font-semibold text-gray-900">
+
+                <div className="text-right ml-4 flex-shrink-0">
+                  <div className="text-lg font-semibold text-gray-900 tabular-nums">
                     {formatCurrency(category.totalAmount, currency)}
                   </div>
                   {timePeriod === 'yearly' && (
                     <div className="text-sm text-gray-500">
-                      Avg: {formatCurrency(category.totalAmount / 12, currency)}/month
+                      {formatCurrency(category.totalAmount / 12, currency)}/mo avg
                     </div>
                   )}
                 </div>
@@ -176,7 +194,7 @@ export default function CategoryBreakdown({
                             {/* Monthly breakdown for yearly view */}
                             {timePeriod === 'yearly' && isExpanded && Object.keys(expenseType.monthlyData).length > 0 && (
                               <div className="mt-3 pt-3 border-t border-gray-200">
-                                <div className="grid grid-cols-6 md:grid-cols-12 gap-2 text-xs">
+                                <div className="grid grid-cols-4 md:grid-cols-12 gap-2 text-xs">
                                   {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
                                     <div key={month} className="text-center">
                                       <div className="font-medium text-gray-600">{month}</div>

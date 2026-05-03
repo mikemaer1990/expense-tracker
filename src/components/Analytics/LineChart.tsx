@@ -55,7 +55,14 @@ export default function LineChart({ data, title = "Spending Trends", timeframe }
         label: 'Daily Spending',
         data: data.map(item => item.amount),
         borderColor: 'rgb(59, 130, 246)', // blue-500
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: function(context: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) {
+          const { ctx, chartArea } = context.chart
+          if (!chartArea) return 'rgba(59, 130, 246, 0.1)'
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+          gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)')
+          gradient.addColorStop(1, 'rgba(59, 130, 246, 0.01)')
+          return gradient
+        },
         borderWidth: 3,
         fill: true,
         tension: 0.4, // Smooth curves
@@ -112,8 +119,7 @@ export default function LineChart({ data, title = "Spending Trends", timeframe }
       x: {
         display: true,
         grid: {
-          display: true,
-          color: 'rgba(156, 163, 175, 0.2)', // gray-400 with opacity
+          display: false,
         },
         ticks: {
           color: 'rgb(107, 114, 128)', // gray-500

@@ -54,19 +54,33 @@ export default function BarChart({
       {
         label: 'Expenses',
         data: data.map(item => item.expenses),
-        backgroundColor: 'rgba(234, 88, 12, 0.8)', // orange-600
+        backgroundColor: function(context: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) {
+          const { ctx, chartArea } = context.chart
+          if (!chartArea) return 'rgba(234, 88, 12, 0.8)'
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+          gradient.addColorStop(0, 'rgba(234, 88, 12, 0.9)')
+          gradient.addColorStop(1, 'rgba(234, 88, 12, 0.25)')
+          return gradient
+        },
         borderColor: 'rgb(234, 88, 12)',
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 5,
         borderSkipped: false,
       },
       ...(showIncome ? [{
         label: 'Income',
         data: data.map(item => item.income || 0),
-        backgroundColor: 'rgba(34, 197, 94, 0.8)', // green-500
+        backgroundColor: function(context: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) {
+          const { ctx, chartArea } = context.chart
+          if (!chartArea) return 'rgba(34, 197, 94, 0.8)'
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+          gradient.addColorStop(0, 'rgba(34, 197, 94, 0.9)')
+          gradient.addColorStop(1, 'rgba(34, 197, 94, 0.25)')
+          return gradient
+        },
         borderColor: 'rgb(34, 197, 94)',
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 5,
         borderSkipped: false,
       }] : [])
     ]
@@ -253,7 +267,7 @@ export default function BarChart({
         </div>
       </div>
 
-      <div className="relative h-64 mb-4">
+      <div className="relative h-80 mb-4">
         <Bar data={chartData} options={options} />
       </div>
 
