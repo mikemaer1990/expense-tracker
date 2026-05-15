@@ -369,6 +369,18 @@ COMMENT ON COLUMN user_preferences.currency IS 'User preferred currency (USD, EU
 COMMENT ON COLUMN user_preferences.enable_expense_splitting IS 'Whether expense splitting feature is enabled';
 
 -- =====================================================
+-- EXPLICIT GRANTS (Supabase Data API)
+-- =====================================================
+-- Required per Supabase breaking change (enforced October 30, 2026)
+-- No anonymous access — RLS policies are the real security boundary.
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.categories TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.expense_types TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.expenses TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.income TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_preferences TO authenticated;
+
+-- =====================================================
 -- SCHEMA VERSION & NOTES
 -- =====================================================
 
