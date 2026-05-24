@@ -22,6 +22,7 @@ interface ExpenseForm {
   recurring_start_date?: string
   recurring_end_date?: string
   is_split: boolean
+  owe_full: boolean
   split_with?: string
 }
 
@@ -93,6 +94,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
       recurring_frequency: undefined,
       recurring_start_date: expense.date,
       is_split: expense.is_split || false,
+      owe_full: !!(expense.is_split && expense.original_amount != null && Math.abs(expense.amount - expense.original_amount) < 0.01),
       split_with: expense.split_with || '',
     },
   })
@@ -100,6 +102,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
   const isRecurring = watch('is_recurring')
   const recurringFrequency = watch('recurring_frequency')
   const isSplit = watch('is_split')
+  const oweFull = watch('owe_full')
   const amount = watch('amount')
 
   useEffect(() => {
@@ -127,7 +130,7 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
 
       // Calculate amounts for splitting
       const originalAmount = Number(data.amount)
-      const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
+      const finalAmount = data.is_split && !data.owe_full ? originalAmount / 2 : originalAmount
 
       // If editing all future instances of a recurring expense
       if (editMode === 'all' && expense.recurring_template_id) {
@@ -365,6 +368,12 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                       error={errors.split_with}
                     />
 
+                    <CheckboxField
+                      {...register('owe_full')}
+                      label="I owe the full amount"
+                      accentColor="blue"
+                    />
+
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-100">
                       <h4 className="text-sm font-semibold text-blue-900 mb-1.5">Split Preview</h4>
                       <div className="space-y-1">
@@ -372,7 +381,8 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                           <span className="font-medium">Original:</span> ${(Number(amount) || 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-blue-700">
-                          <span className="font-medium">Your share:</span> ${((Number(amount) || 0) / 2).toFixed(2)}
+                          <span className="font-medium">Your share:</span> ${oweFull ? (Number(amount) || 0).toFixed(2) : ((Number(amount) || 0) / 2).toFixed(2)}
+                          {oweFull && <span className="text-blue-500 ml-1">(full)</span>}
                         </p>
                       </div>
                     </div>
@@ -452,9 +462,9 @@ export default function EditExpense({ expense, expenseTypes, onClose, onSuccess 
                 <h4 className="text-sm font-semibold text-purple-900 mb-1.5">Recurring Expense</h4>
                 <p className="text-sm text-purple-700 leading-relaxed">
                   <span className="font-medium">
-                    ${isSplit ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
+                    ${isSplit && !oweFull ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
                   </span>
-                  {isSplit && (
+                  {isSplit && !oweFull && (
                     <span className="text-purple-600"> (your share of ${(Number(amount) || 0).toFixed(2)})</span>
                   )}
                   {watch('description') ? ` for ${watch('description')}` : ''} every{' '}

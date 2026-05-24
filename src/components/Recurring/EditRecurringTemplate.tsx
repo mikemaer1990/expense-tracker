@@ -21,6 +21,7 @@ interface TemplateForm {
   // Expense-specific
   expense_type_id?: string
   is_split: boolean
+  owe_full: boolean
   split_with?: string
   // Income-specific
   source?: string
@@ -93,12 +94,14 @@ export default function EditRecurringTemplate({
       end_date: template.end_date || '',
       expense_type_id: template.expense_type_id || '',
       is_split: template.is_split || false,
+      owe_full: !!(template.is_split && template.original_amount != null && Math.abs(template.amount - template.original_amount) < 0.01),
       split_with: template.split_with || '',
       source: template.source || '',
     },
   })
 
   const isSplit = watch('is_split')
+  const oweFull = watch('owe_full')
   const amount = watch('amount')
   const frequency = watch('frequency')
 
@@ -115,7 +118,7 @@ export default function EditRecurringTemplate({
 
       // Calculate amounts for splitting
       const originalAmount = Number(data.amount)
-      const finalAmount = data.is_split ? originalAmount / 2 : originalAmount
+      const finalAmount = data.is_split && !data.owe_full ? originalAmount / 2 : originalAmount
 
       // Build update object based on template type
       const updateData = isExpense
@@ -295,6 +298,12 @@ export default function EditRecurringTemplate({
                         error={errors.split_with}
                       />
 
+                      <CheckboxField
+                        {...register('owe_full')}
+                        label="I owe the full amount"
+                        accentColor="orange"
+                      />
+
                       <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border-2 border-orange-100">
                         <h4 className="text-sm font-semibold text-orange-900 mb-1.5">Split Preview</h4>
                         <div className="space-y-1">
@@ -302,7 +311,8 @@ export default function EditRecurringTemplate({
                             <span className="font-medium">Original:</span> ${(Number(amount) || 0).toFixed(2)}
                           </p>
                           <p className="text-sm text-orange-700">
-                            <span className="font-medium">Your share:</span> ${((Number(amount) || 0) / 2).toFixed(2)}
+                            <span className="font-medium">Your share:</span> ${oweFull ? (Number(amount) || 0).toFixed(2) : ((Number(amount) || 0) / 2).toFixed(2)}
+                            {oweFull && <span className="text-orange-500 ml-1">(full)</span>}
                           </p>
                         </div>
                       </div>
@@ -357,9 +367,9 @@ export default function EditRecurringTemplate({
                   <h4 className="text-sm font-semibold text-orange-900 mb-1.5">Recurring Expense</h4>
                   <p className="text-sm text-orange-700 leading-relaxed">
                     <span className="font-medium">
-                      ${isSplit ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
+                      ${isSplit && !oweFull ? ((Number(amount) || 0) / 2).toFixed(2) : (Number(amount) || 0).toFixed(2)}
                     </span>
-                    {isSplit && (
+                    {isSplit && !oweFull && (
                       <span className="text-orange-600"> (your share of ${(Number(amount) || 0).toFixed(2)})</span>
                     )}
                     {watch('description') ? ` for ${watch('description')}` : ''} every{' '}
