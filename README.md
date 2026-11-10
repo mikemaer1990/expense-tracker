@@ -107,8 +107,7 @@ loggy/
 │   ├── lib/
 │   │   └── supabase.ts       # Supabase client configuration
 │   ├── utils/
-│   │   ├── currency.ts       # Currency formatting utilities
-│   │   └── splitwise.ts      # Expense splitting logic
+│   │   └── currency.ts       # Currency formatting utilities
 │   ├── App.tsx               # Main app component
 │   └── main.tsx             # App entry point
 ├── database/
@@ -142,13 +141,12 @@ loggy/
 ## 📚 Documentation
 
 Additional documentation is available in the `/docs` folder:
-- **[Splitwise Integration](docs/SPLITWISE_INTEGRATION.md)** - Guide for setting up Splitwise API integration
-- **[Edge Function Deployment](docs/EDGE_FUNCTION_DEPLOYMENT.md)** - Instructions for deploying the Splitwise proxy Edge Function
+- **[Edge Function Deployment](docs/EDGE_FUNCTION_DEPLOYMENT.md)** - Instructions for deploying Supabase Edge Functions
 
 ## 📊 Key Features Deep Dive
 
 ### Expense Splitting
-Loggy includes Splitwise-style expense splitting functionality:
+Loggy includes built-in expense splitting:
 - Split expenses equally among participants
 - Track who owes whom
 - Settle debts between friends
@@ -192,7 +190,7 @@ If you encounter any issues or have questions:
 - [ ] Export data to CSV/PDF
 - [ ] Dark mode support
 - [ ] Receipt photo uploads
-- [x] Splitwise API integration ✅ COMPLETED
+- [ ] Shared-expense import (Splitwise CSV export)
 - [x] Multi-currency support ✅ COMPLETED
 - [x] Custom expense type management ✅ COMPLETED
 - [x] Advanced analytics suite ✅ COMPLETED

@@ -1,112 +1,36 @@
-# Deploying the Splitwise Edge Function
+# Deploying Supabase Edge Functions
 
-## What Was Created
+Edge functions live in `supabase/functions/<name>/index.ts` and are configured in `supabase/config.toml`.
 
-**Edge Function:** `supabase/functions/splitwise-proxy/index.ts`
-- Proxies requests to Splitwise API (bypasses CORS)
-- Runs on Supabase's servers (not in browser)
-- Uses your Splitwise API key securely
+Current functions:
+- `generate-recurring-transactions`: creates due recurring expenses and income
 
-## Deployment Options
+## Option 1: Supabase CLI (recommended)
 
-### Option 1: Deploy via Supabase CLI (Recommended)
+1. Install the CLI:
+   ```powershell
+   scoop install supabase
+   ```
+   or `npm install -g supabase`
+2. Log in: `supabase login`
+3. Link the project: `supabase link --project-ref YOUR_PROJECT_REF`
+   (the ref is in the dashboard URL: `https://supabase.com/dashboard/project/YOUR_PROJECT_REF`)
+4. Deploy: `supabase functions deploy <name>`
+5. Verify: `supabase functions list`
 
-#### Step 1: Install Supabase CLI
+To remove a function: `supabase functions delete <name>`
 
-**Windows (PowerShell):**
-```powershell
-scoop install supabase
-```
+## Option 2: Supabase Dashboard
 
-**Or via npm:**
-```bash
-npm install -g supabase
-```
-
-#### Step 2: Login to Supabase
-```bash
-supabase login
-```
-
-#### Step 3: Link your project
-```bash
-supabase link --project-ref YOUR_PROJECT_REF
-```
-
-To find your project ref:
-1. Go to https://supabase.com/dashboard
-2. Open your project
-3. Look at the URL: `https://supabase.com/dashboard/project/YOUR_PROJECT_REF`
-
-#### Step 4: Deploy the function
-```bash
-supabase functions deploy splitwise-proxy
-```
-
-#### Step 5: Verify deployment
-```bash
-supabase functions list
-```
-
----
-
-### Option 2: Deploy via Supabase Dashboard (Easiest)
-
-#### Step 1: Open Supabase Dashboard
-1. Go to https://supabase.com/dashboard
-2. Open your project
-3. Go to "Edge Functions" in the left sidebar
-
-#### Step 2: Create new function
-1. Click "Create a new function"
-2. Name: `splitwise-proxy`
-3. Copy the code from `supabase/functions/splitwise-proxy/index.ts`
-4. Paste into the editor
-5. Click "Deploy"
-
----
-
-## Testing the Edge Function
-
-After deployment, test it with curl:
-
-```bash
-curl -X GET "YOUR_SUPABASE_URL/functions/v1/splitwise-proxy?endpoint=/get_current_user" \
-  -H "x-api-key: YOUR_SPLITWISE_API_KEY"
-```
-
-Replace:
-- `YOUR_SUPABASE_URL` with your Supabase URL (from env file)
-- `YOUR_SPLITWISE_API_KEY` with `3YQaxMeqJic5ZpZrDcAhBkPgABU369LcM2M46vXA`
-
-**Expected response:** JSON with your Splitwise user data
-
----
+1. Open your project, then **Edge Functions** in the sidebar
+2. Create a new function with the same name as the folder
+3. Paste the code from `supabase/functions/<name>/index.ts` and deploy
 
 ## Troubleshooting
 
-### "Function not found"
-- Make sure you deployed to the correct project
-- Check function name is exactly `splitwise-proxy`
+- **"Function not found"**: check that you deployed to the right project and that the name matches exactly
+- **Auth errors**: check `verify_jwt` for the function in `supabase/config.toml`
 
-### "Missing API key"
-- Ensure you're passing `x-api-key` header
-- API key should be in the header, not query params
+## Cost
 
-### "CORS error"
-- Edge function should handle CORS automatically
-- Check that you're calling the function from your domain
-
----
-
-## Cost Estimate
-
-**Free tier limits:**
-- 500,000 invocations/month
-- 2GB bandwidth/month
-
-**Your estimated usage:**
-- ~1,000 invocations/month
-- ~1MB bandwidth/month
-
-**Cost:** $0 (well within free tier)
+The free tier includes 500,000 invocations/month, far more than this app uses.

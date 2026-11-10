@@ -85,7 +85,8 @@ export default function HistoryContent() {
             is_split,
             original_amount,
             split_with,
-            splitwise_expense_id,
+            import_source,
+            external_id,
             expense_types (
               id,
               name,
@@ -276,6 +277,8 @@ export default function HistoryContent() {
           is_split: transaction.is_split,
           original_amount: transaction.original_amount,
           split_with: transaction.split_with,
+          import_source: transaction.import_source,
+          external_id: transaction.external_id,
           recurring_template_id: transaction.recurring_template_id,
           is_generated: transaction.is_generated,
         })
@@ -497,7 +500,7 @@ export default function HistoryContent() {
                                   👥 Split
                                 </span>
                               )}
-                              {transaction.splitwise_expense_id && (
+                              {transaction.import_source?.startsWith('splitwise') && (
                                 <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full inline-flex items-center gap-1">
                                   <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
                                   <span>Splitwise</span>
@@ -586,7 +589,7 @@ export default function HistoryContent() {
                                 👥
                               </span>
                             )}
-                            {transaction.splitwise_expense_id && (
+                            {transaction.import_source?.startsWith('splitwise') && (
                               <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full flex-shrink-0 inline-flex items-center">
                                 <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
                               </span>

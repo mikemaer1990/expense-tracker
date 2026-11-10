@@ -96,7 +96,7 @@ export default function Dashboard() {
           is_split,
           original_amount,
           split_with,
-          splitwise_expense_id,
+          import_source,
           expense_types (
             name,
             icon_name,
@@ -356,7 +356,7 @@ export default function Dashboard() {
                               <span className="font-medium text-gray-900 truncate">
                                 {expense.expense_types?.name || "Unknown"}
                               </span>
-                              {(expense.is_recurring || expense.is_split || expense.splitwise_expense_id) && (
+                              {(expense.is_recurring || expense.is_split || expense.import_source?.startsWith('splitwise')) && (
                                 <div className="flex items-center gap-1 mt-1">
                                   {expense.is_recurring && (
                                     <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full inline-flex items-center">
@@ -368,7 +368,7 @@ export default function Dashboard() {
                                       👥
                                     </span>
                                   )}
-                                  {expense.splitwise_expense_id && (
+                                  {expense.import_source?.startsWith('splitwise') && (
                                     <span className="px-1.5 py-0.75 text-xs bg-teal-100 text-teal-700 rounded-full inline-flex items-center">
                                       <img src="/splitwise/Splitwise_idsODgPjoz_0.svg" alt="Splitwise" className="h-3.5 w-3.5 rounded" />
                                     </span>

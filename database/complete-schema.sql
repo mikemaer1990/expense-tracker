@@ -55,7 +55,9 @@ CREATE TABLE IF NOT EXISTS expenses (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     is_split BOOLEAN NOT NULL DEFAULT false,
     original_amount NUMERIC,
-    split_with TEXT
+    split_with TEXT,
+    import_source TEXT, -- e.g. 'splitwise_api', 'splitwise_csv'; NULL for manual entries
+    external_id TEXT -- ID from the import source, for duplicate detection
 );
 
 -- Income table (Income tracking with recurring support)
@@ -94,6 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_expenses_expense_type_id ON expenses(expense_type
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 CREATE INDEX IF NOT EXISTS idx_expenses_is_recurring ON expenses(is_recurring);
 CREATE INDEX IF NOT EXISTS idx_expenses_created_at ON expenses(created_at);
+CREATE INDEX IF NOT EXISTS idx_expenses_external_id ON expenses(external_id);
 
 -- Income indexes  
 CREATE INDEX IF NOT EXISTS idx_income_user_id ON income(user_id);

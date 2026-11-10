@@ -182,7 +182,6 @@
 **Changes Needed**:
 - Update database trigger `create_default_expense_types()`
 - Apply migration to existing users
-- Update Splitwise mapping in `src/lib/splitwise.ts` (lines 202-203)
 
 ---
 
